@@ -1,0 +1,24 @@
+{
+	"DOMAINVERSIONMAP": {
+		"application": "1.0.0"
+	},
+	"STATDB": {
+		"TYPE": "pgsql",
+		"args": ["postgresql://dbuser:dbpasswrod@dbhost/db"],
+		"kwargs": {}
+    },
+    "TIMELOGDB": {
+		"TYPE": "sqlite",
+		"args": [],
+		"kwargs": {
+			"fileName": "/tmp/timelog.db"
+		}
+	},
+	"ESTIMATORDB": {
+		"TYPE": "sqlite", 
+		"args": [],
+		"kwargs": {
+			"fileName": "/tmp/estimator.db"
+		}
+    }
+}

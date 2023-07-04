@@ -1,0 +1,15 @@
+config.json
+
+to_be_deleted
+contrib
+*.*~
+
+*.pyc
+
+.venv
+
+.idea
+
+**/#*#
+**/.#*
+/.metadata/
