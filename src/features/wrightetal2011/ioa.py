@@ -1,12 +1,13 @@
-from os.path import dirname
-from os.path import sep as pathsep
-from contrib.pyas.src.pyas_v3 import Leaf
-from src.features.wrightetal2011.wrightetal2011 import Wrightetal2011
+
+from contrib.pyas.src.pyas_v3 import As
+
+from features.wrightetal2011.wrightetal2011 import Wrightetal2011
 from src.features.feature import Feature
+from src.mixins.classnamed import ClassNamed
 from mixins.event.event import Event
-from mixins.event.eventshot import EventShot
-from mixins.event.eventduel import EventDuel
-from mixins.event.eventinterception import EventInterception
+from src.mixins.event.eventshot import EventShot
+from src.mixins.event.eventduel import EventDuel
+from src.mixins.event.eventinterception import EventInterception
 from src.mappers.event.constants import Constants as MapperEventConstants
 
 nameIOAFreeKick = 'IOAFreeKick'
@@ -30,19 +31,19 @@ class IOA:
         Event.playPatternIdMap['fromKickOff']: nameIOAKickOff,
     }
 
-    prototypes = [Wrightetal2011] + Wrightetal2011.prototypes
+    prototypes = [
+        Wrightetal2011, *Wrightetal2011.prototypes
+    ]
 
-    @property
-    def value(self):
-
+    def _value(self, relatedEvents):
         def getName():
 
-            name = Feature.featureName(self.__class__)
+            name = As(Feature).featureName(self.__class__)
             self.addMetaKeyVal('Play Pattern', '{} ({})'
                                .format(self.event['playPatternName'], self.event['playPatternId']))
             firstEvent = None \
                 if MapperEventConstants.possessionFirstTag not in self.event['relatedEvents'] \
-                else self.event['relatedEvents'][MapperEventConstants.possessionFirstTag]
+                else relatedEvents[MapperEventConstants.possessionFirstTag]
             if firstEvent:
                 firstEvent = firstEvent[0]
                 self.addMetaKeyVal('First Event Type', '{} ({})'
@@ -68,40 +69,8 @@ class IOA:
 
             return nameIOAOther
 
-        return 1 if getName() == Feature.featureName(self.__class__) else 0
+        return 1 if getName() == ClassNamed.name(self) else 0
 
-
-class IOAFreeKick(Leaf):
-    prototypes = [IOA] + IOA.prototypes
-
-
-class IOACorner(Leaf):
-    prototypes = [IOA] + IOA.prototypes
-
-
-class IOAThrowIn(Leaf):
-    prototypes = [IOA] + IOA.prototypes
-
-
-class IOAInterception(Leaf):
-    prototypes = [IOA] + IOA.prototypes
-
-
-class IOASuccessfulTackle(Leaf):
-    prototypes = [IOA] + IOA.prototypes
-
-
-class IOAOther(Leaf):
-    prototypes = [IOA] + IOA.prototypes
-
-
-class IOAGoalKick(Leaf):
-    prototypes = [IOA] + IOA.prototypes
-
-
-class IOAKickOff(Leaf):
-    prototypes = [IOA] + IOA.prototypes
-
-
-class IOAPenalty(Leaf):
-    prototypes = [IOA] + IOA.prototypes
+    @property
+    def value(self):
+        raise Exception('Not implemented')

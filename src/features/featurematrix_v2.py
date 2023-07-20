@@ -13,15 +13,12 @@ from src.mixins.event.eventcontext import EventContext
 from src.mixins.classidentified import ClassIdentified
 from src.tools.numpy import Numpy as NP
 from src.mixins.log import Log
+from src.features.featurematrix import FeatureMatrix as FeatureMatrix0
 
 
 class FeatureMatrix:
 
-    prototypes = [Log] + Log.prototypes
-
-    @classmethod
-    def onNew(cls, self):
-        pass
+    prototypes = [FeatureMatrix0] + FeatureMatrix0.prototypes
 
     @classmethod
     async def vectorizeEvents(cls, events, FeatureClasses, fallbackValues=[]):
@@ -91,29 +88,3 @@ class FeatureMatrix:
             'formats': dtypes
         })
         return X, errors
-
-    @classmethod
-    def _keepMatrixRows(cls, X, skipRowIndexes):
-        sIndexes = set(skipRowIndexes)
-        if len(X.shape) > 1 and X.shape[1] == 0:
-            return np.zeros((X.shape[0] - len(sIndexes), 0))
-        skipMap = dict(zip(sIndexes, sIndexes))
-        rows = []
-        for r in range(X.shape[0]):
-            if r + 1 in skipMap:
-                continue
-            rows.append(X[r])
-
-        # print(len(rows), X.shape[0], len(sIndexes))
-        assert len(rows) == X.shape[0] - len(sIndexes)
-        res = np.array(rows, dtype=X.dtype)
-        return res
-
-    @classmethod
-    def faultyRowIndexSet(cls, errors):
-        return set(
-            R.pipe(
-                R.map(lambda e: e.context['row']),
-                R.uniq,
-            )(errors)
-        )

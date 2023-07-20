@@ -7,12 +7,12 @@ from src.mappers.competition.competitionmapper import CompetitionMapper
 
 def routes(db):
 
-    async def competitions():
-        rows = As(CompetitionMapper)({}).load(db)
+    def competitions():
+        rows = As(CompetitionMapper)({}).load(db.sync)
         return jsonify({
             'result': [r for r in rows]
         })
 
     return {
-        '': (competitions, (), {'methods': ['GET']}),
+        '/': (competitions, (), {'methods': ['GET']}),
     }

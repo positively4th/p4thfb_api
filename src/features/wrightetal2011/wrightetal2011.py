@@ -1,9 +1,8 @@
-from src.features.feature import Feature
 
 
-class Wrightetal2011():
+class Wrightetal2011:
 
-    prototypes = [Feature] + Feature.prototypes
+    prototypes = []
 
     @classmethod
     def onNew(cls, self):

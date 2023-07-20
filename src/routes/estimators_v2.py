@@ -19,5 +19,5 @@ def routes(estimatorDB):
         return jsonify(estimators)
 
     return {
-        '': (estimators, (), {}),
+        '/': (estimators, (), {}),
     }

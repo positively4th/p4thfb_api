@@ -26,7 +26,7 @@ def routes(statDB, estimatorDB):
             config = payload['config'] if 'config' in payload else None
 
             PlotterClass = [
-                spec['cls'] for spec in Plotter.getPlotters([
+                spec['cls'] for spec in As(Plotter).getPlotters([
                     lambda name, cls: ClassIdentified.id(
                         As(cls)) == plotterId
                 ])
@@ -41,11 +41,11 @@ def routes(statDB, estimatorDB):
                 'error': '',
             }
 
-            allFeatureClasses = Feature.allFeaturesClasses()
+            allFeatureClasses = As(Feature).allFeaturesClasses()
 
             FeatureClasses = [
-                spec['cls'] for spec in Feature.getFeatures(
-                    filterers=[lambda name, cls: ClassIdentified.id(As(cls)) in featureIds])
+                spec['cls'] for spec in As(Feature).getFeatures(
+                    filterers=[lambda name, cls: ClassIdentified.id(cls) in featureIds])
             ]
             plotter.update({
                 'FeatureClasses': FeatureClasses,
@@ -73,7 +73,7 @@ def routes(statDB, estimatorDB):
             })
 
             As(PlotterClass)(plotter).updateConfig(
-                config, allFeatureClasses=Feature.allFeaturesClasses(),
+                config, allFeatureClasses=As(Feature).allFeaturesClasses(),
                 selectedFeatureClasses=FeatureClasses,
                 events=events)
             if not configee.evaluate():

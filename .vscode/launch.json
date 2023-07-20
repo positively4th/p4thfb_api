@@ -6,10 +6,11 @@
     "justMyCode":false,
     "configurations": [
         {
-            "name": "api: Python",
+            "name": "api_v1: Python",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/src/api.py",
+            "program": "${workspaceFolder}/src/api_v1.py",
+            "args": ["-c", "${workspaceFolder}/config.local.json"],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "justMyCode": false
@@ -19,6 +20,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/src/api_v2.py",
+            "args": ["-c", "${workspaceFolder}/config.local.json"],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "justMyCode": false

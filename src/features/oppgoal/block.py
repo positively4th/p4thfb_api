@@ -1,12 +1,12 @@
 from collections import OrderedDict
-from contrib.pyas.src.pyas_v3 import As
 import numpy as np
 from scipy.stats import norm
 import ramda as R
 
-from player import Player
-from src.features.feature import Feature
-from constants.pitch import Pitch as P
+from contrib.pyas.src.pyas_v3 import As
+
+from src.player import Player
+from src.constants.pitch import Pitch as P
 from src.tools.linalg import LinAlg
 
 pitchTgoalCenter = [
@@ -26,7 +26,7 @@ def hitProbability(d, r):
 
 class Block:
 
-    prototypes = [Feature] + Feature.prototypes
+    prototypes = []
 
     pitchTgoalCenter = pitchTgoalCenter
     goalCenterTpitch = np.linalg.inv(pitchTgoalCenter)
@@ -40,9 +40,7 @@ class Block:
         self.hitProbability = lambda d: hitProbability(d, Block.ballRadius)
         self.playerFilters = []
 
-    @property
-    def value(self):
-
+    def _value(self, players):
         def playerIntersection(gSample, gBall, gPlayer):
             a = gSample
             n = np.subtract(gBall, gSample)
@@ -55,8 +53,6 @@ class Block:
             return hit, dist / t
 
         eventee = self.eventee
-        players = As(Player).pipe(
-            eventee['visiblePlayers'], self.playerFilters)
         gBall = LinAlg.transform(eventee.p, P.sbpTpitch, self.pitchTgoalCenter)
         # self.addMetaAnnotation(gBall, 'B', Ts=[self.goalCenterTpitch, P.pitchTsbp])
         pWeigted = 0
@@ -106,6 +102,10 @@ class Block:
             self.addMetaKeyVal(key, val)
 
         return 1.0 - pWeigted
+
+    @property
+    def value(self):
+        raise Exception('Not implemented')
 
     @property
     def goalSamples(self):

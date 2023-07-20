@@ -1,4 +1,5 @@
 import numpy as np
+import ramda as R
 
 from contrib.pyas.src.pyas_v3 import As
 from contrib.pyas.src.pyas_v3 import Leaf
@@ -6,34 +7,30 @@ from contrib.pyas.src.pyas_v3 import Leaf
 from src.mixins.versionguard import globalVersionGuard
 from src.mixins.versionguard import VersionGuardMismatchError
 from src.tools.linalg import LinAlg
-from src.tools.python import Python
-from src.mixins.event.event import Event
 from src.mixins.classnamed import ClassNamed
 from src.mixins.classidentified import ClassIdentified
-from src.common.error import Error
-from src.features.featurcontext import FeatureContext
+from src.tools.python_v2 import Python
 
 
 class Feature:
 
+    classSpecCache = None
     featuresCache = None
+    featureAsStrCache = {}
 
     prototypes = [ClassNamed] + [ClassIdentified] + \
         ClassNamed.prototypes + ClassIdentified.prototypes + \
         [globalVersionGuard()] + globalVersionGuard().prototypes
 
-    approvedVersions = {
-        'application': '==0.0.0',
-    }
     allowUnapprovedVersion = False
+
+    @classmethod
+    def onNew(cls, self):
+        self._meta = []
 
     @staticmethod
     def onNewClass(cls):
         cls.verifyVersions()
-
-    @staticmethod
-    def onNew(cls, self):
-        self._meta = []
 
     @classmethod
     def allFeatures(cls):
@@ -43,52 +40,78 @@ class Feature:
 
     @classmethod
     def allFeaturesClasses(cls):
-        if cls.featuresCache is None:
-            cls.featuresCache = [
-                f['cls'] for f in cls.allFeatures()
-            ]
-        return cls.featuresCache
+        return [f['cls'] for f in cls.allFeatures()]
+
+    @staticmethod
+    def featureFilterer(name, classInspect):
+        if not issubclass(classInspect, (Leaf,)):
+            return False
+
+        try:
+            ClassInspectee = As(classInspect)
+        except VersionGuardMismatchError as e:
+            print(classInspect.__name__, e)
+            return False
+
+        if not ClassInspectee.implements(Feature):
+            return False
+
+        if ClassNamed.name(ClassInspectee) is None:
+            return False
+        if ClassNamed.name(classInspect) is None:
+            return False
+        return True
+
+    @classmethod
+    def getCachedClassSpecs(cls):
+
+        if cls.classSpecCache is None:
+
+            cls.classSpecCache = []
+
+            classSpecs = Python.getClasses(
+                'src/features/**/*.py', rootDir='.', filterers=[cls.featureFilterer])
+            for classSpec in classSpecs:
+
+                cls.classSpecCache.append({
+                    **classSpec,
+                })
+
+        return cls.classSpecCache
 
     @classmethod
     def getFeatures(cls, featureId=None, featureNames=None, filterers=[]):
 
-        def featureFilterer(name, classInspect):
-            if not issubclass(classInspect, (Leaf,)):
-                return False
+        def featureFilterer(name, ClassInspectee):
 
-            try:
-                ClassInspectee = As(classInspect)
-            except VersionGuardMismatchError as e:
-                print(classInspect.__name__, e)
-                return False
-
-            if not ClassInspectee.implements(Feature):
-                return False
-
-            if ClassNamed.name(ClassInspectee) is None:
-                return False
-            if ClassNamed.name(classInspect) is None:
-                return False
             if featureId and featureId != ClassIdentified.id(ClassInspectee):
+                return False
+
+            if featureNames and ClassNamed.name(ClassInspectee) not in featureNames:
                 return False
             return True
 
-        classSpecs = Python.getClasses(
-            'src/features/**/*.py', rootDir='.', filterers=[featureFilterer]+filterers)
+        classSpecs = cls.getCachedClassSpecs()
+
         res = []
         for classSpec in classSpecs:
-            classSpec['cls'] = As(classSpec['cls']) if issubclass(
+            classee = As(classSpec['cls']) if issubclass(
                 classSpec['cls'], (Leaf,)) else classSpec['cls']
+            if R.find(
+                lambda filterer: not filterer(classSpec['className'], classee)
+            )([featureFilterer]+filterers):
+                continue
             res.append({
                 **classSpec,
                 **{
-                    'featureId': ClassIdentified.id(classSpec['cls']),
-                    'featureName': ClassNamed.name(classSpec['cls'])
+                    'cls': classee,
+                    'featureId': ClassIdentified.id(classee),
+                    'featureName': ClassNamed.name(classee)
                 },
             })
         return res
 
-    @ classmethod
+    @classmethod
     def asList(cls, listish):
         if isinstance(listish, np.ndarray):
             return listish.tolist()
@@ -124,11 +147,6 @@ class Feature:
         })
 
     @property
-    @Error.errorize(ContextClasses=FeatureContext, prefix='value')
-    def value(self):
-        return None
-
-    @property
     def meta(self):
         return self._meta
 
@@ -142,7 +160,7 @@ class Feature:
 
     @property
     def eventee(self):
-        return As(Event)(self.event)
+        raise 'Not implemented'
 
     @staticmethod
     def featureId(cls):
@@ -152,9 +170,18 @@ class Feature:
     def featureName(cls):
         return ClassNamed.name(cls)
 
+    @classmethod
+    def createFeatureAsStr(cls, cache: dict = None):
 
-def FeatureAsStr(val: Feature | str, inverse=False):
-    if inverse:
-        F = Feature.getFeatures(val)
-        return As(F[0]['cls']) if len(F) == 1 else None
-    return val.featureId(val)
+        _cache = cls.featureAsStrCache if cache is None else cache
+
+        def featureAsStr(val: Feature | str, inverse=False):
+            if inverse:
+                if val not in _cache:
+                    F = cls.getFeatures(val)
+                    _cache[val] = As(F[0]['cls']) if len(F) == 1 else None
+                return _cache[val]
+
+            return val.featureId(val)
+
+        return featureAsStr

@@ -4,6 +4,7 @@ import numpy as np
 import ramda as R
 
 from contrib.pyas.src.pyas_v3 import Leaf
+from contrib.pyas.src.pyas_v3 import As
 
 from src.features.feature import Feature
 from src.tools.numpy import Numpy as NP
@@ -22,19 +23,19 @@ class StatsModelsEstimater(Leaf):
 
     @property
     def xNames(self):
-        return [Feature.featureName(F) for F in self['XFeatureClasses']]
+        return [As(Feature).featureName(F) for F in self['XFeatureClasses']]
 
     @property
     def yNames(self):
-        return [Feature.featureName(F) for F in self['YFeatureClasses']]
+        return [As(Feature).featureName(F) for F in self['YFeatureClasses']]
 
     @property
     def xIds(self):
-        return [Feature.featureId(F) for F in self['XFeatureClasses']]
+        return [As(Feature).featureId(F) for F in self['XFeatureClasses']]
 
     @property
     def yIds(self):
-        return [Feature.featureId(F) for F in self['YFeatureClasses']]
+        return [As(Feature).featureId(F) for F in self['YFeatureClasses']]
 
     def serializeResult(self, results):
 
@@ -50,16 +51,16 @@ class StatsModelsEstimater(Leaf):
         YFeatureClasses = self['YFeatureClasses']
         estimationNodes = [
             {
-                'id': Feature.featureId(YFeatureClasses[i]),
-                'name': Feature.featureName(YFeatureClasses[i]),
+                'id': As(Feature).featureId(YFeatureClasses[i]),
+                'name': As(Feature).featureName(YFeatureClasses[i]),
                 'N': X.shape[0],
-                'errors': Estimator.collectErrors(self['errors'], [self.yIds[i]] + self.xIds)
+                'errors': As(Estimator).collectErrors(self['errors'], [self.yIds[i]] + self.xIds)
             } for i, col in enumerate(NP.columnNames(Y))
 
         ]
 
         for i, estimationNode in enumerate(estimationNodes):
-            yId = Feature.featureId(YFeatureClasses[i])
+            yId = As(Feature).featureId(YFeatureClasses[i])
             estimationNode['model'] = sm[0](
                 Y[yId], NP.asArray(X), *sm[1], **sm[2])
             estimationNode['yName'] = self.yNames[i]
@@ -69,8 +70,8 @@ class StatsModelsEstimater(Leaf):
             estimationNode['results'] = estimationNode['model'].fit()
             estimationNode['estimationNodes'] = [
                 {
-                    'id': Feature.featureId(XFeatureClasses[i]),
-                    'name': Feature.featureName(XFeatureClasses[i]),
+                    'id': As(Feature).featureId(XFeatureClasses[i]),
+                    'name': As(Feature).featureName(XFeatureClasses[i]),
                     'estimate': c,
                 } for i, c in enumerate(estimationNode['results'].params)
             ]

@@ -1,13 +1,15 @@
-from src.features.feature import Feature
-from contrib.pyas.src.pyas_v3 import Leaf
+from src.mappers.event.constants import Constants
 
-goalOutcomeId = '97'
+goalOutcomeId = Constants.Type.Shot.goalOutcomeId
 
 
-class OutcomeGoal(Leaf):
+class OutcomeGoal:
 
-    prototypes = [Feature]
+    prototypes = []
+
+    def _value(self, outcomeId):
+        return int(outcomeId == goalOutcomeId)
 
     @property
-    def value(self):
-        return int(self.eventee.outcomeId == goalOutcomeId)
+    async def value(self):
+        raise Exception('Not implemented')

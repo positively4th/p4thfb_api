@@ -13,10 +13,10 @@ class TestFeature_v2(unittest.TestCase):
         class A(Leaf):
             prototypes = [Feature] + Feature.prototypes
 
-        self.assertEqual(Feature.featureName(As(A)), 'A')
-        self.assertEqual(Feature.featureName(As(A)({})), 'A')
-        self.assertEqual(Feature.featureName(As(A, Feature)), 'A')
-        self.assertEqual(Feature.featureName(As(A, Feature)({})), 'A')
+        self.assertEqual(As(Feature).featureName(As(A)), 'A')
+        self.assertEqual(As(Feature).featureName(As(A)({})), 'A')
+        self.assertEqual(As(Feature).featureName(As(A, Feature)), 'A')
+        self.assertEqual(As(Feature).featureName(As(A, Feature)({})), 'A')
 
 
 if __name__ == '__main__':

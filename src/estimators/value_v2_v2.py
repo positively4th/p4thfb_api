@@ -173,13 +173,14 @@ class Value(Leaf):
 
     ]
 
-    outcomeEventTypes = {
+    @staticmethod
+    def outcomeEventTypes(): return {
         As(Event).typeIdMap['Shot'],
         As(Event).typeIdMap['Half End'],
         As(Event).typeIdMap['Injury Stoppage']
     }
 
-    valueEventTypes = {
+    def valueEventTypes(): return {
         As(Event).typeIdMap['Shot'],
         As(Event).typeIdMap['Pass'],
         As(Event).typeIdMap['Carry']
@@ -234,7 +235,7 @@ class Value(Leaf):
                 R.descend(R.prop('index')),
             ])(events)
             for i, event in enumerate(ses):
-                if As(Event)(event)['typeId'] in self.outcomeEventTypes:
+                if As(Event)(event)['typeId'] in self.outcomeEventTypes():
                     event['outcomeEvent'] = createEventGetter(event)
                     continue
                 event['outcomeEvent'] = createEventGetter(
@@ -253,7 +254,7 @@ class Value(Leaf):
                     'xGIfOpp': None,
                 }
 
-                if not As(ValueEvent)(event)['typeId'] in self.valueEventTypes:
+                if not As(ValueEvent)(event)['typeId'] in self.valueEventTypes():
                     return res
 
                 outcomeEvent = event['outcomeEvent']()

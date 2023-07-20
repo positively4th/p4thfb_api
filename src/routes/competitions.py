@@ -14,5 +14,5 @@ def routes(db):
         })
 
     return {
-        '': (competitions, (), {'methods': ['GET']}),
+        '/': (competitions, (), {'methods': ['GET']}),
     }

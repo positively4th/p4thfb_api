@@ -87,18 +87,18 @@ class TestOLS_v2(unittest.IsolatedAsyncioTestCase):
         assert len(estimationNodes) == 2
         for y in range(len(olsee['YFeatureClasses'])):
             yEstimationNodee = As(EstimationNode)(estimationNodes[y])
-            self.assertEqual(Feature.featureId(
+            self.assertEqual(As(Feature).featureId(
                 olsee['YFeatureClasses'][y]), yEstimationNodee['id'])
-            self.assertEqual(Feature.featureName(
+            self.assertEqual(As(Feature).featureName(
                 olsee['YFeatureClasses'][y]), yEstimationNodee['name'])
             self.assertEqual(len(olsee['XFeatureClasses']), len(
                 yEstimationNodee['estimationNodes']))
             for x in range(len(olsee['XFeatureClasses'])):
                 xEstimationNodee = As(EstimationNode)(
                     yEstimationNodee['estimationNodes'][x])
-                self.assertEqual(Feature.featureId(
+                self.assertEqual(As(Feature).featureId(
                     olsee['XFeatureClasses'][x]), xEstimationNodee['id'])
-                self.assertEqual(Feature.featureName(
+                self.assertEqual(As(Feature).featureName(
                     olsee['XFeatureClasses'][x]), xEstimationNodee['name'])
                 npt.assert_almost_equal(
                     beta[x][y], xEstimationNodee['estimate'], decimal=1)
@@ -189,18 +189,18 @@ class TestOLS_v2(unittest.IsolatedAsyncioTestCase):
 
         for y in range(len(averagee['YFeatureClasses'])):
             yEstimationNodee = As(EstimationNode)(estimationNodes[y])
-            self.assertEqual(Feature.featureId(
+            self.assertEqual(As(Feature).featureId(
                 averagee['YFeatureClasses'][y]), yEstimationNodee['id'])
-            self.assertEqual(Feature.featureName(
+            self.assertEqual(As(Feature).featureName(
                 averagee['YFeatureClasses'][y]), yEstimationNodee['name'])
             self.assertEqual(len(averagee['XFeatureClasses']), len(
                 yEstimationNodee['estimationNodes']))
             for x in range(len(averagee['XFeatureClasses'])):
                 xEstimationNodee = As(EstimationNode)(
                     yEstimationNodee['estimationNodes'][x])
-                self.assertEqual(Feature.featureId(
+                self.assertEqual(As(Feature).featureId(
                     averagee['XFeatureClasses'][x]), xEstimationNodee['id'])
-                self.assertEqual(Feature.featureName(
+                self.assertEqual(As(Feature).featureName(
                     averagee['XFeatureClasses'][x]), xEstimationNodee['name'])
                 assert xEstimationNodee['estimate'] == (y + 1) * 0.5
 

@@ -1,16 +1,16 @@
-from contrib.pyas.src.pyas_v3 import Leaf
-
-from src.features.player.player import Player
 
 
-class Name(Leaf):
+class Name:
 
-    prototypes = [Player] + Player.prototypes
+    prototypes = []
 
     @staticmethod
     def name(cls):
         return 'Player Name'
 
+    def _value(self):
+        return self.eventee['playerName']
+
     @property
     def value(self):
-        return self.eventee['playerName']
+        raise Exception('Not implemented')

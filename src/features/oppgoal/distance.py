@@ -1,7 +1,5 @@
 import numpy as np
 
-from contrib.pyas.src.pyas_v3 import Leaf
-from src.features.feature import Feature
 from constants.pitch import Pitch as P
 from src.tools.linalg import LinAlg
 
@@ -12,16 +10,14 @@ pitchTgoalCenter = [
 ]
 
 
-class Distance(Leaf):
+class Distance:
 
-    prototypes = [Feature]
+    prototypes = []
 
     pitchTgoalCenter = pitchTgoalCenter
     goalCenterTpitch = np.linalg.inv(pitchTgoalCenter)
 
-    @property
-    def value(self):
-
+    def _value(self):
         eventee = self.eventee
         pBall = LinAlg.transform(eventee.p, P.sbpTpitch)
         pGoal = [
@@ -34,3 +30,7 @@ class Distance(Leaf):
         self.addMetaArrow(pBall, pDelta, Ts=[P.pitchTsbp])
 
         return np.linalg.norm(pDelta)
+
+    @property
+    async def value(self):
+        raise Exception('Not implemented')

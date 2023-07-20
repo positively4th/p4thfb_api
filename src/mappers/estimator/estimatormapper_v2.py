@@ -3,64 +3,13 @@ import ramda as R
 from contrib.pyas.src.pyas_v3 import Leaf
 from contrib.pyas.src.pyas_v3 import As
 
-from src.mixins.versionguard import VersionGuardMismatchError
-from src.mixins.classidentified import ClassIdentified
-from src.mixins.classnamed import ClassNamed
-from src.tools.python_v2 import Python
 from src.mappers.estimation.estimationmapper_v2 import EstimationMapper
-from src.estimators.estimator_v2 import Estimator
+from mappers.estimator.estimatormapper import EstimatorMapper as EstimatorMapper0
 
 
 class EstimatorMapper(Leaf):
 
-    @staticmethod
-    def idFilterer(ids):
-
-        def helper(name, classInspect):
-            ClassInspectee = As(classInspect)
-            if not ClassIdentified.id(ClassInspectee) in ids:
-                return False
-            return True
-
-        return helper
-
-    @classmethod
-    def getEstimators(cls, filterers=[]):
-
-        def filterer(name, classInspect):
-
-            if not issubclass(classInspect, (Leaf,)):
-                return False
-
-            try:
-                ClassInspectee = As(classInspect)
-            except VersionGuardMismatchError as e:
-                print(classInspect.__name__, e)
-                return False
-
-            # methodNames = [name for name, _ in inspect.getmembers(
-            #     ClassInspectee, inspect.ismethod)]
-
-            if not issubclass(ClassInspectee, (Estimator,)):
-                return False
-
-            if ClassIdentified.id(ClassInspectee) is None:
-                return False
-
-            return True
-
-        classSpecs = Python.getClasses('src/estimators/**/*.py', rootDir='.',
-                                       filterers=[filterer] + filterers)
-        res = []
-        for classSpec in classSpecs:
-            res.append({
-                **classSpec,
-                **{
-                    'estimatorId': ClassIdentified.id(As(classSpec['cls'])),
-                    'estimatorName': ClassNamed.name(As(classSpec['cls']))
-                },
-            })
-        return res
+    prototypes = [EstimatorMapper0] + EstimatorMapper0.prototypes
 
     async def loadEstimations(self, estimatorDB, estimators, jiffs):
         estimatorIds = [

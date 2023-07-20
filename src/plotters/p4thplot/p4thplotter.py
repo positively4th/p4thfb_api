@@ -3,7 +3,7 @@
 from contrib.pyas.src.pyas_v3 import T
 from contrib.p4thpyplot.src.tools import Tools as P4thPlotTools
 
-from src.plotters.plotter import Plotter
+from src.plotters.plotter_v1 import Plotter
 
 
 class P4thPlotter:

@@ -95,9 +95,9 @@ class TestMultiLogistic_v2(unittest.IsolatedAsyncioTestCase):
         assert len(estimationNodes) == 1
         for y in range(len(mlee['YFeatureClasses'])):
             yEstimationNodee = As(EstimationNode)(estimationNodes[y])
-            self.assertEqual(Feature.featureId(
+            self.assertEqual(As(Feature).featureId(
                 mlee['YFeatureClasses'][y]), yEstimationNodee['id'])
-            self.assertEqual(Feature.featureName(
+            self.assertEqual(As(Feature).featureName(
                 mlee['YFeatureClasses'][y]), yEstimationNodee['name'])
             categories = yEstimationNodee['categories']
             self.assertEqual(len(categories), len(
@@ -111,9 +111,9 @@ class TestMultiLogistic_v2(unittest.IsolatedAsyncioTestCase):
                 for x in range(len(mlee['XFeatureClasses'])):
                     xEstimationNodee = As(EstimationNode)(
                         cEstimationNodee['estimationNodes'][x])
-                    self.assertEqual('{}:{}'.format(categories[c], Feature.featureId(mlee['XFeatureClasses'][x])),
+                    self.assertEqual('{}:{}'.format(categories[c], As(Feature).featureId(mlee['XFeatureClasses'][x])),
                                      xEstimationNodee['id'])
-                    self.assertEqual(Feature.featureName(
+                    self.assertEqual(As(Feature).featureName(
                         mlee['XFeatureClasses'][x]), xEstimationNodee['name'])
                     # Only 1 y to estimate,skip y-index.
                     npt.assert_almost_equal(

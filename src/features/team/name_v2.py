@@ -1,16 +1,16 @@
 from contrib.pyas.src.pyas_v3 import Leaf
 
 from src.features.team.team_v2 import Team
+from features.team.name import Name as Name0
 
 
 class Name(Leaf):
 
-    prototypes = [Team] + Team.prototypes
-
-    @staticmethod
-    def name(cls):
-        return 'Team Name'
+    prototypes = [
+        Name0, *Name0.prototypes,
+        Team, *Team.prototypes,
+    ]
 
     @property
     async def value(self):
-        return self.eventee['eventTeamName']
+        return self._value()

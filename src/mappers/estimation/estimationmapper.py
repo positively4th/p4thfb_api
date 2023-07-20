@@ -2,24 +2,20 @@ import datetime
 from dill import dumps, loads
 
 from contrib.p4thpydb.db.ts import Ts
-from contrib.p4thpydb.db.sqlite.orm import ORM
 from contrib.p4thpydb.db.orm import TableSpecModel
-from contrib.p4thpydb.db.nestedquery import NestedQuery
-from contrib.pyas.src.pyas_v3 import Leaf
+from contrib.p4thpydb.db.nestedquery_async import NestedQuery
 
 from src.mappers.mapper import Mapper
-from src.features.feature import FeatureAsStr
+from src.features.feature import Feature 
 
+class EstimationMapper:
 
-@staticmethod
-def nullableJSON(val, inverse=False):
-    if inverse:
-        return val if val is None else loads(val)
+    @staticmethod
+    def nullableJSON(val, inverse=False):
+        if inverse:
+            return val if val is None else loads(val)
 
-    return dumps(val)
-
-
-class EstimationMapper(Leaf):
+        return dumps(val)
 
     prototypes = [Mapper] + Mapper.prototypes
 
@@ -36,11 +32,11 @@ class EstimationMapper(Leaf):
             },
             'XFeatureClasses': {
                 'definition': "TEXT NOT NULL",
-                'transform': Ts.listTCreator(FeatureAsStr),
+                'transform': Ts.listTCreator(Feature.createFeatureAsStr()),
             },
             'YFeatureClasses':  {
                 'definition': "TEXT NOT NULL",
-                'transform': Ts.listTCreator(FeatureAsStr),
+                'transform': Ts.listTCreator(Feature.createFeatureAsStr()),
             },
             'estimationNodes': {
                 'definition': "TEXT",
@@ -85,10 +81,10 @@ class EstimationMapper(Leaf):
 
     }
 
-    def load(self, db, estimatorIds, jiffs=None):
-        orm = ORM(db)
+    async def load(self, db, estimatorIds, jiffs=None):
+        orm = db.createORM(db)
         pipes = db.createPipes()
-        orm.ensureTable(self.tableSpec)
+        await orm.ensureTable(self.tableSpec)
         tableSpecee = TableSpecModel(self.tableSpec)
         qpT = (
             'select jiff, estimatorId from {}'.format(self.tableSpec['name']),
@@ -104,16 +100,15 @@ class EstimationMapper(Leaf):
             **{'estimationFilter': qpT[0]},
         })
 
-        rows = NestedQuery.query(lambda q: db.query(
+        rows = await NestedQuery.query(lambda q: db.query(
             (q, qpT[1], tableSpecee.Ts()), debug=True), qs)
         return rows
 
-    def save(self, db, rows):
-
+    async def save(self, db, rows):
         now = datetime.datetime.now()
-        orm = ORM(db)
-        orm.ensureTable(self.tableSpec)
+        orm = db.createORM(db)
+        await orm.ensureTable(self.tableSpec)
         for r in rows:
             if 'jiff' not in r:
                 r['jiff'] = now
-        orm.upsert(self.tableSpec, rows)
+        await orm.upsert(self.tableSpec, rows)

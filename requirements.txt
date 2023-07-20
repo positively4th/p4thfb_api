@@ -40,6 +40,7 @@ ramda==0.7.6
 scikit-learn==1.2.2
 scipy==1.11.1
 scramp==1.4.4
+semver==3.0.1
 six==1.16.0
 statsmodels==0.14.0
 testing.common.database==2.0.3
@@ -49,6 +50,7 @@ toml==0.10.2
 toolz==0.12.0
 typing_extensions==4.6.3
 tzdata==2023.3
+uvloop==0.17.0
 Werkzeug==2.3.6
 wsproto==1.2.0
 xxhash==3.2.0

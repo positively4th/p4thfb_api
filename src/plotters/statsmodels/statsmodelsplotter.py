@@ -1,5 +1,5 @@
 
-from src.plotters.plotter import Plotter
+from src.plotters.plotter_v1 import Plotter
 
 
 class StatsmodelsPlotter:

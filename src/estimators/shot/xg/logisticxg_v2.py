@@ -10,14 +10,13 @@ from src.features.oppgoal.distance_v2 import Distance
 from src.features.oppgoal.probblockgoalie_v2 import ProbBlockGoalie
 from src.features.oppgoal.probblockdefenders_v2 import ProbBlockDefenders
 from src.features.isheader_v2 import IsHeader
-from src.mixins.classidentified import ClassIdentified
-from src.mixins.classnamed import ClassNamed
 
 
 class LogisticXG(Leaf):
 
-    prototypes = [Logistic] + Logistic.prototypes + [ClassIdentified,
-                                                     ClassNamed] + ClassIdentified.prototypes + ClassNamed.prototypes
+    prototypes = [
+        Logistic, *Logistic.prototypes
+    ]
 
     columnSpecs = {
         'YFeatureClasses': {

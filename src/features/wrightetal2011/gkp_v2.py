@@ -1,72 +1,25 @@
 from contrib.pyas.src.pyas_v3 import Leaf
 from contrib.pyas.src.pyas_v3 import As
 
-from src.features.wrightetal2011.wrightetal2011_v2 import Wrightetal2011
 from src.features.helpers.zones import Zone6Yard
 from src.features.helpers.zones import Zone18Yard
 from src.features.helpers.zones import ZonePitch
-from constants.statsbombpitch import StatsBombPitch as SBP
-from mixins.event.event_v2 import Event
-from src.tools.matcher import Matcher
-from src.tools.color import Color
-
-
-def transform(what, T):
-
-    if isinstance(what, (tuple, list)):
-        return [T(w) for w in what]
-
-    if isinstance(what, dict):
-        return {k: T(v) for k, v in what.items()}
-
-    return T(what)
+from src.features.feature_v2 import Feature
+from src.mixins.event.event_v2 import Event
+from features.wrightetal2011.gkp import GKP as GKP0
 
 
 class GKP:
-    prototypes = [Wrightetal2011] + Wrightetal2011.prototypes
 
-    @classmethod
-    def onNew(cls, self):
-
-        def createDrawZone(zone):
-
-            def drawZone(_, sign):
-                c = self.color if sign == 1 else Color.complement(self.color)
-                self.addMetaArea(zone.clockWiseZonePoints, c)
-
-            return drawZone
-
-        self.isMatchFilter = transform(
-            self.filterZones, lambda torz: torz.isInZone if hasattr(torz, 'isInZone') else torz)
-        self.zoneAddMeta = transform(self.filterZones, lambda torz: createDrawZone(
-            torz) if hasattr(torz, 'isInZone') else torz)
+    prototypes = [
+        GKP0, *GKP0.prototypes,
+        Feature, *Feature.prototypes,
+    ]
 
     @property
     async def value(self):
-        try:
-            eventee = As(Event)(self.event)
-            if not eventee.isGoalKeeperEvent():
-                gkEvent = await eventee.relatedGoalKeeperEvents()
-                assert len(gkEvent) == 1
-                eventee = As(Event)(gkEvent[0])
-
-            p = eventee['p']
-            if eventee['possessionTeamId'] != eventee['eventTeamId']:
-                p = [
-                    SBP.sbRightOppCorner[0] - p[0],
-                    SBP.sbRightOppCorner[1] - p[1],
-                    1,
-                ]
-            self.addMetaAnnotation(p, 'GK')
-
-            Matcher.traverse(p, self.zoneAddMeta)
-
-            return 1 if Matcher.isMatch(p, self.isMatchFilter) else 0
-        except TypeError as e:
-            return None
-        except Exception as e:
-            print(e)
-            raise e
+        gkEvents = await self.eventee.relatedGoalKeeperEvents()
+        return self._value(As(Event)(gkEvents[0]) if len(gkEvents) == 1 else None)
 
 
 class GKP6Yard(Leaf):

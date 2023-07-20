@@ -1,0 +1,26 @@
+{
+	"DOMAINVERSIONMAP": {
+		"application": "1.0.0"
+	},
+	"HOST": "0.0.0.0",
+	"PORT": 3000,
+	"STATDB": {
+		"TYPE": "pgsql",
+		"args": ["postgresql://p4thfb_api:p4thfb_api@postgres/p4thfb_api"],
+		"kwargs": {}
+    },
+    "TIMELOGDB": {
+		"TYPE": "sqlite",
+		"args": [],
+		"kwargs": {
+			"fileName": "/data/timelog.db"
+		}
+	},
+	"ESTIMATORDB": {
+		"TYPE": "sqlite", 
+		"args": [],
+		"kwargs": {
+			"fileName": "/data/estimator.db"
+		}
+    }
+}

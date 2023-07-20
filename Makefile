@@ -1,7 +1,13 @@
 .PHONY: requirements contrib api postgres
 
-all: requirements contrib api postgres
-	
+all: local containers 
+
+local: requirements contrib
+
+containers: api postgres
+
+container: requirements contrib
+
 requirements: 
 	python -m venv .venv \
 	&& ( \

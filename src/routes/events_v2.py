@@ -7,7 +7,7 @@ import datetime
 from contrib.pyas.src.pyas_v3 import As
 
 from src.common.filter import Filter
-from src.tools.python_v2 import CSONWrapper
+from src.tools.python_v2 import Python
 from src.store.event.eventstore import EventStore
 from src.mixins.event.event_v2 import Event
 from src.mixins.timelogdb import TimeLogDB
@@ -61,9 +61,9 @@ def routes(db, timeLogDB):
         resp = await (timeLogDBee.asRuntimeLogged(jsonify, identifier=__file__,
                                                   tag='jsonify',
                                                   group=group,
-                                                  count=len(ids)))(CSONWrapper(events))
+                                                  count=len(ids)))(Python.CSONWrapper(events))
         return resp
 
     return {
-        '': events
+        '/': (events, (), {'methods': ['GET']}),
     }

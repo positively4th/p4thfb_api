@@ -1,13 +1,11 @@
-from contrib.pyas.src.pyas_v3 import As
-from contrib.pyas.src.pyas_v3 import Leaf
-
 from src.features.wrightetal2011.wrightetal2011 import Wrightetal2011
-from mixins.event.event import Event
-from mixins.event.eventshot import EventShot
+from src.mixins.event.eventshot import EventShot
 from src.mappers.event.constants import Constants
 
 
 class TOS:
+
+    prototypes = [Wrightetal2011, *Wrightetal2011.prototypes]
 
     nameMatchers = [
         {
@@ -31,17 +29,14 @@ class TOS:
         },
 
     ]
-    prototypes = [Wrightetal2011] + Wrightetal2011.prototypes
 
-    @property
-    def value(self):
+    def _value(self, eventShotee):
 
         def getName():
 
-            eventee = As(Event)(self.event)
+            eventee = self.eventee
             if eventee['typeId'] != Constants.shotTypeId:
                 return None
-            eventShotee = As(EventShot)(eventee['type'])
             for matcher in self.nameMatchers:
                 name = matcher['name']
                 for key, values in matcher.items():
@@ -62,22 +57,6 @@ class TOS:
             return None
         return 1 if matchedName == self.featureName(self.__class__) else 0
 
-
-class TOSFoot(Leaf):
-    prototypes = [TOS] + TOS.prototypes
-
-
-class TOSHead(Leaf):
-    prototypes = [TOS] + TOS.prototypes
-
-
-class TOSBody(Leaf):
-    prototypes = [TOS] + TOS.prototypes
-
-
-class TOSPenalty(Leaf):
-    prototypes = [TOS] + TOS.prototypes
-
-
-class TOSOther(Leaf):
-    prototypes = [TOS] + TOS.prototypes
+    @property
+    async def value(self):
+        raise Exception('Not implemented.')

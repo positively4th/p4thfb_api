@@ -1,9 +1,5 @@
-from os.path import dirname
-from os.path import sep as pathsep
-
 from contrib.pyas.src.pyas_v3 import Leaf
 
-from src.features.wrightetal2011.wrightetal2011_v2 import Wrightetal2011
 from src.features.helpers.zones import Zone1
 from src.features.helpers.zones import Zone2
 from src.features.helpers.zones import Zone3
@@ -12,25 +8,20 @@ from src.features.helpers.zones import Zone5
 from src.features.helpers.zones import Zone6
 from src.features.helpers.zones import Zone7
 from src.features.helpers.zones import Zone8
+from src.features.feature_v2 import Feature
+from features.wrightetal2011.pos import POS as POS0
 
 
-class POS():
+class POS:
 
-    prototypes = [Wrightetal2011] + Wrightetal2011.prototypes
+    prototypes = [
+        POS0, *POS0.prototypes,
+        Feature, *Feature.prototypes,
+    ]
 
     @property
     async def value(self):
-        try:
-            p = self.event['p']
-            self.addMetaArea(self.zone.clockWiseZonePoints,
-                             fillColor=self.color)
-
-            return 1 if self.zone.isInZone(p) else 0
-        except TypeError:
-            return None
-        except Exception as e:
-            print(e)
-            # raise e
+        return self._value()
 
 
 class POS8(Leaf):

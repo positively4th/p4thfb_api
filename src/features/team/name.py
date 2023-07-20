@@ -1,15 +1,15 @@
-from src.features.team.team import Team
-from contrib.pyas.src.pyas_v3 import Leaf
 
+class Name:
 
-class Name(Leaf):
-
-    prototypes = [Team] + Team.prototypes
+    prototypes = []
 
     @staticmethod
     def name(cls):
         return 'Team Name'
 
+    def _value(self):
+        return self.eventee['eventTeamName']
+
     @property
     def value(self):
-        return self.eventee['eventTeamName']
+        raise Exception('Not implemented.')

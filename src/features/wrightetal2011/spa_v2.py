@@ -1,9 +1,6 @@
-import numpy as np
-
 from contrib.pyas.src.pyas_v3 import Leaf
 from contrib.pyas.src.pyas_v3 import As
 
-from src.features.wrightetal2011.wrightetal2011_v2 import Wrightetal2011
 from src.features.helpers.zones import Zone1
 from src.features.helpers.zones import Zone2
 from src.features.helpers.zones import Zone3
@@ -12,35 +9,25 @@ from src.features.helpers.zones import Zone5
 from src.features.helpers.zones import Zone6
 from src.features.helpers.zones import Zone7
 from src.features.helpers.zones import Zone8
-from mixins.event.event_v2 import Event
+from src.mixins.event.event_v2 import Event
+from src.features.feature_v2 import Feature
+from features.wrightetal2011.spa import SPA as SPA0
 
 
 class SPA:
 
-    prototypes = [Wrightetal2011] + Wrightetal2011.prototypes
+    prototypes = [
+        SPA0, *SPA0.prototypes,
+        Feature, *Feature.prototypes,
+    ]
 
     @property
-    async def value(self):
-        try:
+    async def value(self, ):
+        firstEvent = await As(Event)(self.event).possessionFirstEvent
+        return self._value(
+            None if firstEvent is None else As(Event)(firstEvent)
+        )
 
-            p = self.event['p']
-
-            firstEvent = await As(Event)(self.event).possessionFirstEvent
-            pStart = As(Event)(firstEvent).p
-            self.addMetaArea(self.zone.clockWiseZonePoints,
-                             fillColor=self.color)
-            self.addMetaArrow(pStart, np.subtract(p, pStart))
-
-            return 1 if self.zone.isInZone(pStart) else 0
-        except TypeError as e:
-            print(e)
-            return None
-        except Exception as e:
-            print(e)
-            raise e
-
-
-# def createSPA(name, zone, color='white'):
 
 class SPA8(Leaf):
     prototypes = [SPA] + SPA.prototypes

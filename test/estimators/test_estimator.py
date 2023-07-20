@@ -5,7 +5,7 @@ import numpy.testing as npt
 
 from contrib.pyas.src.pyas_v3 import As
 
-from src.estimators.estimator import Estimator
+from src.estimators.estimator_v1 import Estimator
 
 
 class TestEstimator(unittest.TestCase):

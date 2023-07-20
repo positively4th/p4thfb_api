@@ -1,13 +1,13 @@
-from contrib.pyas.src.pyas_v3 import As
-from contrib.pyas.src.pyas_v3 import Leaf
-
-from src.features.wrightetal2011.wrightetal2011 import Wrightetal2011
-from mixins.event.event import Event
 from mixins.event.eventpass import EventPass
+from src.features.wrightetal2011.wrightetal2011 import Wrightetal2011
 from src.mappers.event.constants import Constants as MapperEventConstants
 
 
 class TOF:
+
+    prototypes = [
+        Wrightetal2011, *Wrightetal2011.prototypes
+    ]
 
     nameMatchers = [
         {
@@ -35,23 +35,17 @@ class TOF:
         },
 
     ]
-    prototypes = [Wrightetal2011] + Wrightetal2011.prototypes
 
-    @property
-    def value(self):
+    def _value(self, assistEventee, eventPass):
 
         def getName():
 
-            Eventee = As(Event)(self.event)
-            assistEventee = None \
-                if Eventee.assistingEvent is None \
-                else As(Event)(Eventee.assistingEvent)
             if assistEventee is None:
                 return None
             if not assistEventee['typeId'] == MapperEventConstants.passTypeId:
                 return None
 
-            eventPass = assistEventee['type']
+            # eventPass = await assistEventee['type']
 
             for matcher in self.nameMatchers:
                 name = matcher['name']
@@ -73,22 +67,6 @@ class TOF:
             return None
         return 1 if matchedName == self.featureName(self.__class__) else 0
 
-
-class TOFOpenPlayAir(Leaf):
-    prototypes = [TOF] + TOF.prototypes
-
-
-class TOFOpenPlayGround(Leaf):
-    prototypes = [TOF] + TOF.prototypes
-
-
-class TOFDeadBallAir(Leaf):
-    prototypes = [TOF] + TOF.prototypes
-
-
-class TOFDeaBallGround(Leaf):
-    prototypes = [TOF] + TOF.prototypes
-
-
-class TOFNotEvident(Leaf):
-    prototypes = [TOF] + TOF.prototypes
+    @property
+    def value(self):
+        raise Exception('Not implemented.')

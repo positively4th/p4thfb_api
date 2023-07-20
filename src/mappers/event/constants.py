@@ -27,3 +27,7 @@ class Constants:
     assistingPassTag = 'assistingPass'
     shotAssistedTag = 'shotAssisted'
     shotKeyPassTag = 'shotKeyPass'
+
+    class Type:
+        class Shot:
+            goalOutcomeId = '97'

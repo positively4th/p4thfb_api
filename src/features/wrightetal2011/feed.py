@@ -1,14 +1,12 @@
 import ramda as R
 
-from contrib.pyas.src.pyas_v3 import Leaf
-from contrib.pyas.src.pyas_v3 import Leaf
 from contrib.pyas.src.pyas_v3 import As
 
 from src.tools.matcher import Matcher
 from mixins.event.event import Event
 
 
-class Feed(Leaf):
+class Feed:
 
     prototypes = []
 
@@ -22,39 +20,39 @@ class Feed(Leaf):
     }
 
     toEventMatcher = [
-        Event.isPossessionTeamEvent,
+        As(Event).isPossessionTeamEvent,
         '&',
         [
-            Event.isDribbleEvent,
+            As(Event).isDribbleEvent,
             '|',
-            Event.isCarryEvent,
+            As(Event).isCarryEvent,
         ]
     ]
 
     toEventIgnoreMatcher = [
-        ['!', Event.isPossessionTeamEvent],
+        ['!', As(Event).isPossessionTeamEvent],
         '|',
-        Event.isDribbledPastEvent,
+        As(Event).isDribbledPastEvent,
     ]
 
     fromEventIgnoreMatcher = [
-        ['!', Event.isPossessionTeamEvent],
+        ['!', As(Event).isPossessionTeamEvent],
         '|',
-        Event.isBallReceiptEvent,
+        As(Event).isBallReceiptEvent,
         '|',
-        Event.isBadBehaviourEvent,
+        As(Event).isBadBehaviourEvent,
         '|',
-        Event.isTacticalShiftEvent,
+        As(Event).isTacticalShiftEvent,
     ]
 
     fromEventMatcher = [
-        Event.isPassEvent,
+        As(Event).isPassEvent,
         '|',
-        Event.isShotEvent,
+        As(Event).isShotEvent,
         '|',
-        Event.isClearanceEvent,
+        As(Event).isClearanceEvent,
         '|',
-        Event.isGoalKeeperEvent,
+        As(Event).isGoalKeeperEvent,
     ]
 
     @classmethod
@@ -62,8 +60,7 @@ class Feed(Leaf):
         self._fromEvent = None
         self._toEvent = None
 
-    @property
-    def fromToPair(self):
+    def _fromToPair(self, withinPossessionEvents):
         fromEvent = None
         toEvent = None
         error = None
@@ -74,7 +71,7 @@ class Feed(Leaf):
                 R.filter(lambda event: As(Event)(event)
                          ['index'] <= eventee['index']),
                 R.sort_by(lambda event: -As(Event)(event)['index']),
-            )(eventee.withinPossessionEvents)
+            )(withinPossessionEvents)
 
             toEvent = candidates.pop(0)
             while len(candidates) > 0:
@@ -101,3 +98,7 @@ class Feed(Leaf):
             print(e)
 
         return [fromEvent, toEvent, error]
+
+    @property
+    def fromToPair(self):
+        raise Exception('Not implemented.')

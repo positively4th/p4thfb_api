@@ -83,18 +83,18 @@ class TestLogistic_v2(unittest.IsolatedAsyncioTestCase):
         assert len(estimationNodes) == 2
         for y in range(len(logistee['YFeatureClasses'])):
             yEstimationNodee = As(EstimationNode)(estimationNodes[y])
-            self.assertEqual(Feature.featureId(
+            self.assertEqual(As(Feature).featureId(
                 logistee['YFeatureClasses'][y]), yEstimationNodee['id'])
-            self.assertEqual(Feature.featureName(
+            self.assertEqual(As(Feature).featureName(
                 logistee['YFeatureClasses'][y]), yEstimationNodee['name'])
             self.assertEqual(len(logistee['XFeatureClasses']), len(
                 yEstimationNodee['estimationNodes']))
             for x in range(len(logistee['XFeatureClasses'])):
                 xEstimationNodee = As(EstimationNode)(
                     yEstimationNodee['estimationNodes'][x])
-                self.assertEqual(Feature.featureId(
+                self.assertEqual(As(Feature).featureId(
                     logistee['XFeatureClasses'][x]), xEstimationNodee['id'])
-                self.assertEqual(Feature.featureName(
+                self.assertEqual(As(Feature).featureName(
                     logistee['XFeatureClasses'][x]), xEstimationNodee['name'])
                 npt.assert_almost_equal(
                     beta[x][y], xEstimationNodee['estimate'], decimal=1)

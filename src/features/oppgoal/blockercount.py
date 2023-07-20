@@ -1,26 +1,19 @@
+from contrib.pyas.src.pyas_v3 import As
 import numpy as np
 
-from contrib.pyas.src.pyas_v3 import As
-from contrib.pyas.src.pyas_v3 import Leaf
-
-from player import Player
-from src.features.feature import Feature
+from src.player import Player
 from src.tools.linalg import LinAlg
-from constants.statsbombpitch import StatsBombPitch as SBP
+from src.constants.statsbombpitch import StatsBombPitch as SBP
 
 
-class BlockerCount(Leaf):
+class BlockerCount:
 
-    prototypes = [Feature] + Feature.prototypes
+    prototypes = []
 
     playerFilters = []
 
-    @property
-    def value(self):
-
+    def _value(self, players):
         eventee = self.eventee
-        players = As(Player).pipe(
-            eventee['visiblePlayers'], self.playerFilters)
 
         s = eventee.p
         da = np.subtract(list(SBP.sbLeftOppGoalPost) + [1], s)
@@ -36,3 +29,7 @@ class BlockerCount(Leaf):
                 res += 1
                 self.addMetaAnnotation(p, '1')
         return res
+
+    @property
+    async def value(self):
+        raise Exception('Not implemented.')

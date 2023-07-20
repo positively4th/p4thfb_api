@@ -1,15 +1,18 @@
-from contrib.pyas.src.pyas_v3 import Leaf
-
-from src.tools.matcher import Matcher
+from src.mixins.versionguard import globalVersionGuard
 from src.mappers.event.constants import Constants
 from src.mixins.classidentified import ClassIdentified
 from src.mixins.classnamed import ClassNamed
 
 
-class Event(Leaf):
+class EventException(Exception):
+    pass
+
+
+class Event:
 
     prototypes = [ClassIdentified, ClassNamed] \
-        + ClassIdentified.prototypes + ClassNamed.prototypes
+        + ClassIdentified.prototypes + ClassNamed.prototypes \
+        + [globalVersionGuard()] + globalVersionGuard().prototypes
 
     idTypeMap = {
         Constants.dispossessedTypeId: 'Dispossessed',
@@ -33,6 +36,8 @@ class Event(Leaf):
             'transformer': lambda val, *_, **__: int(val),
         },
     }
+
+    allowUnapprovedVersion = False
 
     typeIdMap = {v: k for k, v in idTypeMap.items()}
 
@@ -106,17 +111,10 @@ class Event(Leaf):
         return self['typeId'] == Constants.carryTypeId
 
     def matchRelatedEvents(self, filter):
-        relatedEvents = self['relatedEvents']
-        related = relatedEvents['related'] if 'related' in relatedEvents else [
-        ]
-        return Matcher.match(related, filter)
+        raise Exception('Not implemented.')
 
     def relatedGoalKeeperEvents(self):
-
-        def filter(event):
-            return event['typeId'] == Constants.goalKeeperTypeId
-
-        return self.matchRelatedEvents(filter)
+        raise Exception('Not implemented.')
 
     @property
     def asText(self):
@@ -138,21 +136,11 @@ class Event(Leaf):
 
     @property
     def xG(self):
-        if not 'type' in self:
-            return None
-        _type = self['type']
-        if not 'xG' in _type:
-            return None
-        return _type['xG']
+        raise Exception('Not imlplemented.')
 
     @property
     def outcomeId(self):
-        if not 'type' in self:
-            return None
-        _type = self['type']
-        if not 'outcomeId' in _type:
-            return None
-        return _type['outcomeId']
+        raise Exception('Not imlplemented.')
 
     @property
     def x(self):
@@ -168,24 +156,12 @@ class Event(Leaf):
 
     @property
     def assistingEvent(self):
-        tagRelatedEventsMap = self['relatedEvents']
-        assistEvent = tagRelatedEventsMap[Constants.assistingPassTag] \
-            if Constants.assistingPassTag in tagRelatedEventsMap else []
-        assert len(assistEvent) <= 1
-        return assistEvent[0] if len(assistEvent) > 0 else None
+        raise Exception('Not imlplemented.')
 
     @property
     def possessionFirstEvent(self):
-        tagRelatedEventsMap = self['relatedEvents']
-        event = tagRelatedEventsMap[Constants.possessionFirstTag] \
-            if Constants.possessionFirstTag in tagRelatedEventsMap else []
-        assert len(event) <= 1
-        return event[0] if len(event) > 0 else None
+        raise Exception('Not imlplemented.')
 
     @property
     def withinPossessionEvents(self):
-        tagRelatedEventsMap = self['relatedEvents']
-        possessionEvents = tagRelatedEventsMap[Constants.withinPossessionTag] \
-            if Constants.withinPossessionTag in tagRelatedEventsMap else []
-        assert len(possessionEvents) >= 1
-        return possessionEvents
+        raise Exception('Not imlplemented.')

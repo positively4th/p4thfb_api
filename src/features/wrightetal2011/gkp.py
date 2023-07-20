@@ -1,12 +1,7 @@
-from contrib.pyas.src.pyas_v3 import Leaf
 from contrib.pyas.src.pyas_v3 import As
 
 from src.features.wrightetal2011.wrightetal2011 import Wrightetal2011
-from src.features.helpers.zones import Zone6Yard
-from src.features.helpers.zones import Zone18Yard
-from src.features.helpers.zones import ZonePitch
 from constants.statsbombpitch import StatsBombPitch as SBP
-from mixins.event.event import Event
 from src.tools.matcher import Matcher
 from src.tools.color import Color
 
@@ -23,7 +18,9 @@ def transform(what, T):
 
 
 class GKP:
-    prototypes = [Wrightetal2011] + Wrightetal2011.prototypes
+    prototypes = [
+        Wrightetal2011, *Wrightetal2011.prototypes
+    ]
 
     @classmethod
     def onNew(cls, self):
@@ -41,14 +38,11 @@ class GKP:
         self.zoneAddMeta = transform(self.filterZones, lambda torz: createDrawZone(
             torz) if hasattr(torz, 'isInZone') else torz)
 
-    @property
-    def value(self):
+    def _value(self, relatedGoalKeeperEventee):
         try:
-            eventee = As(Event)(self.event)
+            eventee = self.eventee
             if not eventee.isGoalKeeperEvent():
-                gkEvent = eventee.relatedGoalKeeperEvents()
-                assert len(gkEvent) == 1
-                eventee = As(Event)(gkEvent[0])
+                eventee = relatedGoalKeeperEventee
 
             p = eventee['p']
             if eventee['possessionTeamId'] != eventee['eventTeamId']:
@@ -68,20 +62,6 @@ class GKP:
             print(e)
             raise e
 
-
-class GKP6Yard(Leaf):
-    prototypes = [GKP] + GKP.prototypes
-    filterZones = [Zone6Yard]
-    color = 'red'
-
-
-class GKP18Yard(Leaf):
-    prototypes = [GKP] + GKP.prototypes
-    filterZones = [Zone18Yard, '&', '!', Zone6Yard]
-    color = 'orange'
-
-
-class GKPPitch(Leaf):
-    prototypes = [GKP] + GKP.prototypes
-    filterZones = [ZonePitch, '&', '!', Zone18Yard]
-    color = 'purple'
+    @property
+    def value(self):
+        raise Exception('Not implemented.')

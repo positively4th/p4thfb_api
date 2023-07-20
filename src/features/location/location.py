@@ -1,12 +1,11 @@
 
 
-from src.features.feature import Feature
 from src.constants.pitch import Pitch as P
 
 
 class Location:
 
-    prototypes = [Feature]
+    prototypes = []
 
     pitchTcentric = [
         [1, 0, -0.5 * P.ext[0]],

@@ -15,7 +15,7 @@ def routes():
         nonlocal _allPlotters
 
         if _allPlotters is None:
-            _allPlotters = Plotter.getPlotters()
+            _allPlotters = As(Plotter).getPlotters()
             for p in _allPlotters:
                 p['id'] = ClassIdentified.id(As(p['cls']))
                 del p['cls']
@@ -28,5 +28,5 @@ def routes():
         return jsonify(getAllPlotters())
 
     return {
-        '': (plotters, (), {'methods': ['GET']}),
+        '/': (plotters, (), {'methods': ['GET']}),
     }

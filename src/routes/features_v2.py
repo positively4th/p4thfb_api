@@ -1,16 +1,18 @@
 from quart import jsonify
 
+from contrib.pyas.src.pyas_v3 import As
+
 from src.features.feature_v2 import Feature
 
 
 def routes(db):
 
     def features():
-        features = [dict(f) for f in Feature.getFeatures()]
+        features = [dict(f) for f in As(Feature).getFeatures()]
         for feature in features:
             del feature['cls']
         return jsonify(features)
 
     return {
-        '': features,
+        '/': (features, (), {'methods': ['GET']}),
     }

@@ -10,9 +10,9 @@ from contrib.p4thpymap.src.mappers import pdf
 
 from src.mixins.versionguard import globalVersionGuard
 from src.mixins.versionguard import VersionGuardMismatchError
-from src.tools.python import Python
+from src.tools.python_v1 import Python
 from src.features.feature import Feature
-from src.features.featurematrix import FeatureMatrix
+from src.features.featurematrix_v1 import FeatureMatrix
 from src.mixins.classnamed import ClassNamed
 from src.mixins.classidentified import ClassIdentified
 from src.mixins.config.config import Config
@@ -60,11 +60,11 @@ class Plotter:
 
     @property
     def featureNames(self):
-        return [Feature.featureName(F) for F in self['FeatureClasses'] + self['MetaFeatureClasses']]
+        return [As(Feature).featureName(F) for F in self['FeatureClasses'] + self['MetaFeatureClasses']]
 
     @property
     def featureIds(self):
-        return [Feature.featureId(F) for F in self['FeatureClasses'] + self['MetaFeatureClasses']]
+        return [As(Feature).featureId(F) for F in self['FeatureClasses'] + self['MetaFeatureClasses']]
 
     @classmethod
     def getPlotters(cls, filterers=[]):
@@ -110,17 +110,13 @@ class Plotter:
             self['config'] = config
         return self['config']
 
-    def plot(self, events, config=None):
+    def plotFromMatrix(self, X, errors, config=None):
 
         _config = self['config'] if config is None else config
 
         configMap = self['configMap']
         kwargs = self.mapConfigValues(configMap, As(Config)(_config))
 
-        X, errors = FeatureMatrix.vectorizeEvents(
-            events, self['FeatureClasses'] + self['MetaFeatureClasses'])
-        X = FeatureMatrix._keepMatrixRows(
-            X, As(FeatureMatrix).faultyRowIndexSet(errors))
         dfX = pd.DataFrame.from_records(X)
 
         dynTotWidth = min(pdf.colWidth2TotWidth(

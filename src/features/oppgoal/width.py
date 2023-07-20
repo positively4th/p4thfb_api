@@ -1,11 +1,7 @@
 import numpy as np
 
-from contrib.pyas.src.pyas_v3 import Leaf
-
-from src.features.feature import Feature
-from constants.pitch import Pitch as P
+from src.constants.pitch import Pitch as P
 from src.tools.linalg import LinAlg
-from src.features.feature import Feature
 
 pitchTgoalCenter = [
     [-1, 0, P.ext[0] - 0.5 * P.ext[0]],
@@ -14,9 +10,9 @@ pitchTgoalCenter = [
 ]
 
 
-class Width(Leaf):
+class Width:
 
-    prototypes = [Feature]
+    prototypes = []
 
     pitchTgoalCenter = pitchTgoalCenter
     goalCenterTpitch = np.linalg.inv(pitchTgoalCenter)
@@ -25,8 +21,7 @@ class Width(Leaf):
     gWidth = 7.32
     ballRadius = 0.221 / 2
 
-    @property
-    def value(self):
+    def _value(self):
         eventee = self.eventee
         gBall = LinAlg.transform(eventee.p, P.sbpTpitch, self.pitchTgoalCenter)
         width = 0.0
@@ -48,6 +43,10 @@ class Width(Leaf):
         self.addMetaAnnotation(gBall, str(round(width, 2)), Ts=[
                                self.goalCenterTpitch, P.pitchTsbp])
         return width / self.gWidth
+
+    @property
+    def value(self):
+        raise Exception('Not implemented')
 
     @property
     def goalPosts(self):

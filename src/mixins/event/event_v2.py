@@ -9,12 +9,8 @@ from contrib.pyas.src.pyas_v3 import Leaf
 
 from src.tools.matcher import Matcher
 from src.mappers.event.constants import Constants
-from src.mixins.event.event import Event as Event_v1
 from src.store.autostores import getAutoStores
-
-
-class EventException(Exception):
-    pass
+from src.mixins.event.event import Event as Event0
 
 
 async def _type(val, key, self):
@@ -65,8 +61,9 @@ async def _possesionEvents(val, key, self):
 
 class Event(Leaf):
 
-    autoStores = None
-    prototypes = [Event_v1] + Event_v1.prototypes
+    prototypes = [
+        Event0, *Event0.prototypes,
+    ]
 
     columnSpecs = {
         'stores': {
@@ -88,6 +85,12 @@ class Event(Leaf):
             'transformer': T.async_fallback(_relatedEvents),
         },
     }
+
+    approvedVersions = {
+        'application': '==1.0.0',
+    }
+
+    autoStores = None
 
     @classmethod
     def isEvent(cls, e: dict) -> bool:
@@ -132,14 +135,6 @@ class Event(Leaf):
 
         return res
 
-    def matchRelatedEvents(self, filter):
-        raise EventException(
-            'Obsolete matchRelatedEvents in evnet_v1. Use event_v2 async version.')
-        relatedEvents = self['relatedEvents']
-        related = relatedEvents['related'] if 'related' in relatedEvents else [
-        ]
-        return Matcher.match(related, filter)
-
     async def matchRelatedEvents(self, filter):
         relatedEvents = await self['relatedEvents']
 
@@ -156,33 +151,6 @@ class Event(Leaf):
         return await self.matchRelatedEvents(filter)
 
     @property
-    async def possessionFirstEvent(self):
-        relatedEvents = await self['relatedEvents']
-        event = R.filter(
-            lambda re: Constants.possessionFirstTag in re['tag'])(relatedEvents)
-        assert len(event) <= 1
-        return event[0] if len(event) > 0 else None
-
-    @property
-    async def withinPossessionEvents(self):
-        relatedEvents = await self['relatedEvents']
-        possessionEvents = R.filter(
-            lambda re: Constants.withinPossessionTag in re['tag'])(relatedEvents)
-
-        # possessionEvents = relatedEvents[Constants.withinPossessionTag] \
-        #     if Constants.withinPossessionTag in relatedEvents else []
-        assert len(possessionEvents) >= 1
-        return possessionEvents
-
-    @property
-    async def assistingEvent(self):
-        relatedEvents = await self['relatedEvents']
-        assistEvent = R.filter(
-            lambda re: Constants.assistingPassTag in re['tag'])(relatedEvents)
-        assert len(assistEvent) <= 1
-        return assistEvent[0] if len(assistEvent) > 0 else None
-
-    @property
     async def xG(self):
         _type = await self['type']
         if _type is None or not 'xG' in _type:
@@ -197,3 +165,28 @@ class Event(Leaf):
         if not 'outcomeId' in _type:
             return None
         return _type['outcomeId']
+
+    @property
+    async def assistingEvent(self):
+        relatedEvents = await self['relatedEvents']
+        assistEvent = R.filter(
+            lambda re: Constants.assistingPassTag in re['tag'])(relatedEvents)
+        assert len(assistEvent) <= 1
+        return assistEvent[0] if len(assistEvent) > 0 else None
+
+    @property
+    async def possessionFirstEvent(self):
+        relatedEvents = await self['relatedEvents']
+        event = R.filter(
+            lambda re: Constants.possessionFirstTag in re['tag'])(relatedEvents)
+        assert len(event) <= 1
+        return event[0] if len(event) > 0 else None
+
+    @property
+    async def withinPossessionEvents(self):
+        relatedEvents = await self['relatedEvents']
+        possessionEvents = R.filter(
+            lambda re: Constants.withinPossessionTag in re['tag'])(relatedEvents)
+
+        assert len(possessionEvents) >= 1
+        return possessionEvents

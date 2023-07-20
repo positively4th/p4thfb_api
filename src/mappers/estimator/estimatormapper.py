@@ -1,79 +1,95 @@
-import inspect
 import ramda as R
 
 from contrib.pyas.src.pyas_v3 import Leaf
 from contrib.pyas.src.pyas_v3 import As
 
 from src.mixins.versionguard import VersionGuardMismatchError
+from src.mixins.classidentified import ClassIdentified
+from src.mixins.classnamed import ClassNamed
 from src.tools.python import Python
-from src.mappers.estimation.estimationmapper import EstimationMapper
+from src.estimators.estimator import Estimator
 
 
-class EstimatorMapper(Leaf):
+class EstimatorMapper:
+
+    prototypes = []
+
+    classSpecCache = None
 
     @staticmethod
     def idFilterer(ids):
 
-        def helper(name, classInspectee):
-            if not classInspectee.estimatorId() in ids:
+        def helper(name, ClassInspectee):
+            if not ClassIdentified.id(ClassInspectee) in ids:
                 return False
             return True
 
         return helper
 
+    @staticmethod
+    def filterer(name, classInspect):
+
+        if not issubclass(classInspect, (Leaf,)):
+            return False
+
+        try:
+            ClassInspectee = As(classInspect)
+        except VersionGuardMismatchError as e:
+            # print(classInspect.__name__, e)
+            return False
+
+        if not issubclass(ClassInspectee, (Estimator,)):
+            return False
+
+        return True
+
+    @classmethod
+    def getCachedClassSpecs(cls):
+
+        if cls.classSpecCache is None:
+
+            cls.classSpecCache = []
+
+            classSpecs = Python.getClasses('src/estimators/**/*.py', rootDir='.',
+                                           filterers=[cls.filterer])
+            for classSpec in classSpecs:
+                cls.classSpecCache.append({
+                    **classSpec,
+                    **{
+                        'estimatorId': ClassIdentified.id(As(classSpec['cls'])),
+                        'estimatorName': ClassNamed.name(As(classSpec['cls']))
+                    },
+                })
+
+        return cls.classSpecCache
+
     @classmethod
     def getEstimators(cls, filterers=[]):
 
-        def filterer(name, classInspectee):
-            methodNames = [name for name, _ in inspect.getmembers(
-                classInspectee, inspect.ismethod)]
+        classSpecs = cls.getCachedClassSpecs()
 
-            if not issubclass(classInspectee, (Leaf,)):
-                return False
-
-            try:
-                As(classInspectee)
-            except VersionGuardMismatchError as e:
-                print(classInspectee.__name__, e)
-                return False
-
-            if not 'estimatorName' in methodNames:
-                return False
-            return True
-
-        classSpecs = Python.getClasses('src/estimators/**/*.py', rootDir='.',
-                                       filterers=[filterer] + filterers)
         res = []
         for classSpec in classSpecs:
+            classee = As(classSpec['cls']) if issubclass(
+                classSpec['cls'], (Leaf,)) else classSpec['cls']
+
+            if R.find(
+                lambda filterer: not filterer(classSpec['className'], classee)
+            )(filterers):
+                continue
+
             res.append({
                 **classSpec,
                 **{
-                    'estimatorId': classSpec['cls'].estimatorId(),
-                    'estimatorName': classSpec['cls'].estimatorName()
+                    'cls': classee,
+                    'estimatorId': ClassIdentified.id(As(classSpec['cls'])),
+                    'estimatorName': ClassNamed.name(As(classSpec['cls']))
                 },
             })
         return res
 
     def loadEstimations(self, estimatorDB, estimators, jiffs):
-        estimatorIds = [
-            e['estimatorId'] for e in estimators
-        ]
-        estimations = As(EstimationMapper)({}).load(
-            estimatorDB, estimatorIds, jiffs=jiffs)
-        estimations = R.group_by(lambda est: est['estimatorId'])(estimations)
-        for estimator in estimators:
-            estimatorId = estimator['estimatorId']
-            estimator['estimations'] = estimations[estimatorId] \
-                if estimatorId in estimations else []
+        raise Exception('Not implemented')
 
     def load(self, estimatorDB, estimatorIds=None, jiffs=None):
-
-        filterers = []
-        if estimatorIds is not None:
-            filterers.append(self.idFilterer(estimatorIds))
-        estimators = self.getEstimators(filterers=filterers)
-
-        if not jiffs is False:
-            self.loadEstimations(estimatorDB, estimators, jiffs)
-
-        return estimators
+        raise Exception('Not implemented')

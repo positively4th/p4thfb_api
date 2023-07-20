@@ -1,0 +1,26 @@
+{
+	"DOMAINVERSIONMAP": {
+		"application": "1.0.0"
+	},
+	"HOST": "127.0.0.1",
+	"PORT": 3000,
+	"STATDB": {
+		"TYPE": "pgsql",
+		"args": ["postgresql://statsbomb:watw1watc@localhost/statsbomb_v2_r3"],
+		"kwargs": {}
+    },
+    "TIMELOGDB": {
+		"TYPE": "sqlite",
+		"args": [],
+		"kwargs": {
+			"fileName": "/tmp/timelog.db"
+		}
+	},
+	"ESTIMATORDB": {
+		"TYPE": "sqlite", 
+		"args": [],
+		"kwargs": {
+			"fileName": "/tmp/estimator.db"
+		}
+    }
+}
