@@ -1,14 +1,17 @@
-.PHONY: requirements contrib api postgres
+.PHONY: \
+	setup setup-requirements setup-contrib \
+	docker docker-api docker-postgres \
 
-all: local containers 
+default: setup docker
 
-local: requirements contrib
+all: setup docker
 
-containers: api postgres
+container: setup
 
-container: requirements contrib
+#setup
+setup: setup-requirements setup-contrib
 
-requirements: 
+setup-requirements: 
 	python -m venv .venv \
 	&& ( \
 		source .venv/bin/activate \
@@ -18,13 +21,16 @@ requirements:
 		pip install -r requirements.txt \
 	)
 
-contrib: 
+setup-contrib: 
 	make -C contrib
 
-api:
+#docker
+docker: docker-api docker-postgres
+
+docker-api:
 	docker build -t api -f api.dockerfile .
 
-postgres:
+docker-postgres:
 	docker build -t postgresql -f postgres.dockerfile .
 
 clean: 
