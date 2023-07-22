@@ -11,7 +11,7 @@ COPY requirements.txt Makefile ./
 RUN ln -s /usr/bin/python3.10 /usr/local/bin/python
 RUN make container
 
-COPY .env config.container.json ./
+COPY .env.docker config.container.json ./
 
 RUN dnf -y remove make gcc git
 #RUN dnf -y install telnet wget curl procps
