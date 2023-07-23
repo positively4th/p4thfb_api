@@ -1,5 +1,6 @@
 .PHONY: \
 	setup setup-requirements setup-contrib \
+	dev-run_v1 dev-run_v2 \
 	docker docker-api docker-postgres \
 
 default: setup docker
@@ -23,6 +24,21 @@ setup-requirements:
 
 setup-contrib: 
 	make -C contrib
+
+dev-run_v1: setup
+	(\
+	source .venv/bin/activate \
+	&& \
+	PYTHONPATH="." python src/api_v1.py -c ./config.local.json \
+	)
+
+
+dev-run_v2: setup
+	(\
+	source .venv/bin/activate \
+	&& \
+	PYTHONPATH="." python src/api_v2.py -c ./config.local.json \
+	)
 
 #docker
 docker: docker-api docker-postgres
