@@ -1,7 +1,7 @@
 .PHONY: \
 	setup setup-requirements setup-contrib \
 	dev-run_v1 dev-run_v2 \
-	docker docker-api docker-postgres \
+	docker docker-api docker-postgres 
 
 default: setup docker
 

@@ -1,0 +1,11 @@
+apiVersion: 1
+
+datasources:
+
+  - name: Timelog
+
+    type: frser-sqlite-datasource
+
+    jsonData:
+      path: /data/timelog.db
+
