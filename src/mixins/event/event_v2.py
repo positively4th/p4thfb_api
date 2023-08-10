@@ -11,6 +11,7 @@ from src.tools.matcher import Matcher
 from src.mappers.event.constants import Constants
 from src.store.autostores import getAutoStores
 from src.mixins.event.event import Event as Event0
+from src.mixins.contextlogger import ContextLogger
 
 
 async def _type(val, key, self):
@@ -107,15 +108,25 @@ class Event(Leaf):
             f.set_result(val)
             return f
 
+        def queue(events):
+            coros = [None] * width * height
+
+            for y, event in enumerate(events):
+                for x, feature in enumerate(features.keys()):
+                    coros[y*width+x] = ensureCoro(As(Event)(event)[feature])
+            return coros
+
+        async def gather(coros):
+            cores = asyncio.gather(*coros, return_exceptions=True)
+            cores = await cores
+            return cores
+
         height = len(events)
         width = len(features)
-        coros = [None] * width * height
 
-        for y, event in enumerate(events):
-            for x, feature in enumerate(features.keys()):
-                coros[y*width+x] = ensureCoro(As(Event)(event)[feature])
+        coros = queue(events)
 
-        cores = await asyncio.gather(*coros, return_exceptions=True)
+        cores = await gather(coros)
 
         res = [{**event} for event in events]
         for x, feature in enumerate(features.keys()):
@@ -127,7 +138,11 @@ class Event(Leaf):
                 continue
 
             children = R.unnest([e[f] for e in res if e[f] is not None])
-            children = await cls.export(children, fs)
+            children = await ContextLogger.asLogged(
+                cls.export,
+                resultHandler=ContextLogger.countResultHandler
+            )(children, fs)
+
             for e in res:
                 if e[f] is None:
                     continue

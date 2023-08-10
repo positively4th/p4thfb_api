@@ -60,7 +60,11 @@ def routes(statDB, estimatorDB):
         events = payload['events']
 
         estimatoree = As(estimator['cls'])(estimator)
-        res = await estimatoree.predict(events, estimation)
+        try:
+            res = await estimatoree.predict(events, estimation)
+        except Exception as e:
+            print('\n\n' + str(e) + '\n\n')
+            return jsonify({'error': str(e)})
 
         return jsonify({
             'result': res

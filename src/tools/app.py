@@ -2,69 +2,78 @@ from json import load
 from collections.abc import Mapping
 from logging import getLogger
 
-def createConfigGetter(app, environ: Mapping, args, config : dict={}):
+from contrib.p4thpydb.db.pgsql.db import DB as PQSQLDB
+from contrib.p4thpydb.db.pgsql.db_async import DB as PQSQLDBASYNC
+from contrib.p4thpydb.db.sqlite.db import DB as SQLITEDB
+from contrib.p4thpydb.db.sqlite.db_async import DB as SQLITEDBASYNC
+from contrib.pyas.src.pyas_v3 import As
 
 
-    def configGetter(name=None, defVal=None, config=config):
-        
-        if name is None:
-            return config
-        
-        res = None
-        res = environ.get(name, None) if res is None else res 
-        res = getattr(args, name) if res is None and name in args else res 
-        res = config[name] if res is None and name in config else res 
-        res = defVal if res is None else res
-        return res
+class App:
 
+    @classmethod
+    def createConfigGetter(cls, app, environ: Mapping, args, config: dict = {}):
 
+        def configGetter(name=None, defVal=None, config=config):
 
-    configFile = configGetter('CONFIGFILE', 'config.json')
-    print('Loading conf from: ', configFile)
+            if name is None:
+                return config
 
-    config.update(dict(app.config))
-    with open(configFile) as f:
-        config.update(load(f))
+            res = None
+            res = environ.get(name, None) if res is None else res
+            res = getattr(args, name) if res is None and name in args else res
+            res = config[name] if res is None and name in config else res
+            res = defVal if res is None else res
+            return res
 
-    return configGetter
+        configFile = configGetter('CONFIGFILE', 'config.json')
+        print('Loading conf from: ', configFile)
 
+        config.update(dict(app.config))
+        with open(configFile) as f:
+            config.update(load(f))
 
-def createConnect2DB(PGDB, SqliteDB):
+        return configGetter
 
-    def connect2DB(dbConfig):
-        if dbConfig['TYPE'] == 'pgsql':
-            return PGDB(*dbConfig['args'], **dbConfig['kwargs'])
-        if dbConfig['TYPE'] == 'sqlite':
-            return SqliteDB(*dbConfig['args'], **dbConfig['kwargs'])
+    @classmethod
+    def createConnect2DB(cls):
 
-        print('dbConfig', dbConfig)
-        return None
+        def connect2DB(dbConfig):
+            asyncDB = 'ASYNC' in dbConfig and dbConfig['ASYNC']
+            if dbConfig['TYPE'] == 'pgsql':
+                return PQSQLDBASYNC(*dbConfig['args'], **dbConfig['kwargs']) if asyncDB else PQSQLDB(*dbConfig['args'], **dbConfig['kwargs'])
+            if dbConfig['TYPE'] == 'sqlite':
+                return SQLITEDBASYNC(*dbConfig['args'], **dbConfig['kwargs']) if asyncDB else SQLITEDB(*dbConfig['args'], **dbConfig['kwargs'])
 
-    return connect2DB
+            print('dbConfig', dbConfig)
+            return None
 
-def setupDBs(PGDB, SqliteDB, configGetter):
+        return connect2DB
 
-    connect2DB = createConnect2DB(PGDB, SqliteDB)
-    return (
-        connect2DB(configGetter('STATDB')),
-        lambda: connect2DB(configGetter('ESTIMATORDB')),
+    @classmethod
+    def setupDBs(cls, configGetter):
+
+        connect2DB = cls.createConnect2DB()
+        return (
+            connect2DB(configGetter('STATDB')),
+            lambda: connect2DB(configGetter('ESTIMATORDB')),
             connect2DB(configGetter('TIMELOGDB'))
-    )
+        )
 
+    @classmethod
+    def addRoute(cls, app, prefix: str, path: str, handler: dict, logger: None):
 
-def addRoute(app, prefix: str, path: str, handler: dict, logger: None):
+        _logger = getLogger() if logger is None else logger
 
-    _logger = getLogger() if logger is None else logger
+        def joinIf(parts, sep):
+            return sep.join([
+                part for part in parts if part != ''
+            ])
 
-    def joinIf(parts, sep):
-        return sep.join([
-            part for part in parts if part != ''
-        ])
-
-    fullPath = joinIf([
-        prefix.rstrip('/'), 
-        path.strip('/'),
-    ], '/')
-    kwArgs = { **{ 'strict_slashes': False }, **handler[2] }
-    app.route(fullPath, *handler[1], **kwArgs)(handler[0])
-    _logger.info('Added route %s.', fullPath)
+        fullPath = joinIf([
+            prefix.rstrip('/'),
+            path.strip('/'),
+        ], '/')
+        kwArgs = {**{'strict_slashes': False}, **handler[2]}
+        app.route(fullPath, *handler[1], **kwArgs)(handler[0])
+        _logger.info('Added route %s.', fullPath)

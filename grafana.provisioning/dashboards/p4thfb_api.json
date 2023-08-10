@@ -18,7 +18,6 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 3,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -27,12 +26,10 @@
         "type": "frser-sqlite-datasource",
         "uid": "P6CBB2DBF24D67217"
       },
-      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "yellow",
-            "mode": "shades"
+            "mode": "palette-classic"
           },
           "custom": {
             "axisCenteredZero": false,
@@ -69,83 +66,7 @@
             ]
           }
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "count"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "red",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "throughput"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "blue",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "elapsed"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "red",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "user"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "green",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "system"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "purple",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
@@ -153,7 +74,7 @@
         "x": 0,
         "y": 0
       },
-      "id": 1,
+      "id": 3,
       "options": {
         "barRadius": 0,
         "barWidth": 0.97,
@@ -164,35 +85,332 @@
             "mean"
           ],
           "displayMode": "list",
-          "placement": "right",
+          "placement": "bottom",
           "showLegend": true
         },
         "orientation": "auto",
         "showValue": "auto",
-        "stacking": "normal",
+        "stacking": "none",
         "tooltip": {
           "mode": "multi",
-          "sort": "desc"
+          "sort": "none"
         },
-        "xField": "identifier",
-        "xTickLabelRotation": 0,
+        "xField": "tag",
+        "xTickLabelRotation": -45,
         "xTickLabelSpacing": 0
       },
-      "pluginVersion": "10.0.2",
       "targets": [
         {
           "datasource": {
             "type": "frser-sqlite-datasource",
             "uid": "P6CBB2DBF24D67217"
           },
-          "queryText": "select identifier, sum(elapsed) \"elapsed\", sum(\"user\") \"user\", sum(\"system\") \"system\"\nfrom timeLog_v1\nwhere tag = 'process'\ngroup by identifier\norder by \"elapsed\"\n",
+          "queryText": "select tag\n, sum(\"elapsed\") \"elapsed\"\n, sum(\"user\") \"user\"\n, sum(\"children_user\") \"children_user\"\n, sum(\"system\") \"system\"\n, sum(\"children_system\") \"children_system\"\nfrom timeLog_v2\nwhere 1 = 1 \nand \"identifier\" in (${identifier:singlequote})\nand \"tagPath\" in (${tagPath:singlequote})\nand tag in (${tag:singlequote})\nand (\"traceId\" = ${traceId:singlequote} or ${traceId:singlequote} == '') \ngroup by tag\n",
           "queryType": "table",
-          "rawQueryText": "select identifier, sum(elapsed) \"elapsed\", sum(\"user\") \"user\", sum(\"system\") \"system\"\nfrom timeLog_v1\nwhere tag = 'process'\ngroup by identifier\norder by \"elapsed\"\n",
-          "refId": "Database throughput",
-          "timeColumns": []
+          "rawQueryText": "select tag\n, sum(\"elapsed\") \"elapsed\"\n, sum(\"user\") \"user\"\n, sum(\"children_user\") \"children_user\"\n, sum(\"system\") \"system\"\n, sum(\"children_system\") \"children_system\"\nfrom timeLog_v2\nwhere 1 = 1 \nand \"identifier\" in (${identifier:singlequote})\nand \"tagPath\" in (${tagPath:singlequote})\nand tag in (${tag:singlequote})\nand (\"traceId\" = ${traceId:singlequote} or ${traceId:singlequote} == '') \ngroup by tag\n",
+          "refId": "A",
+          "timeColumns": [
+            "time",
+            "ts"
+          ]
         }
       ],
-      "title": "Stores DB Query Time",
+      "title": "Function Total Run Time",
+      "transformations": [],
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "P6CBB2DBF24D67217"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 5,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        },
+        "xField": "tag",
+        "xTickLabelRotation": -45,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "P6CBB2DBF24D67217"
+          },
+          "queryText": "select tag\n, sum(\"elapsed\") / count(*) \"elapsed\"\n, sum(\"user\") / count(*) \"user\" \n, sum(\"children_user\") / count(*) \"children_user\"\n, sum(\"system\")  / count(*) \"system\" \n, sum(\"children_system\")  / count(*) \"children_system\"\nfrom timeLog_v2\nwhere 1 = 1 \nand \"identifier\" in (${identifier:singlequote})\nand \"tagPath\" in (${tagPath:singlequote})\nand tag in (${tag:singlequote})\nand (\"traceId\" = ${traceId:singlequote} or ${traceId:singlequote} == '') \ngroup by tag\n",
+          "queryType": "table",
+          "rawQueryText": "select tag\n, sum(\"elapsed\") / count(*) \"elapsed\"\n, sum(\"user\") / count(*) \"user\" \n, sum(\"children_user\") / count(*) \"children_user\"\n, sum(\"system\")  / count(*) \"system\" \n, sum(\"children_system\")  / count(*) \"children_system\"\nfrom timeLog_v2\nwhere 1 = 1 \nand \"identifier\" in (${identifier:singlequote})\nand \"tagPath\" in (${tagPath:singlequote})\nand tag in (${tag:singlequote})\nand (\"traceId\" = ${traceId:singlequote} or ${traceId:singlequote} == '') \ngroup by tag\n",
+          "refId": "A",
+          "timeColumns": [
+            "time",
+            "ts"
+          ]
+        }
+      ],
+      "title": "Function Average Run Time",
+      "transformations": [],
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "P6CBB2DBF24D67217"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 6,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        },
+        "xField": "tag",
+        "xTickLabelRotation": -45,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "P6CBB2DBF24D67217"
+          },
+          "queryText": "select tag\n, sum(\"count\") / sum(\"elapsed\")  \"througput\"\nfrom timeLog_v2\nwhere 1 = 1 \nand \"identifier\" in (${identifier:singlequote})\nand \"tagPath\" in (${tagPath:singlequote})\nand tag in (${tag:singlequote})\nand (\"traceId\" = ${traceId:singlequote} or ${traceId:singlequote} == '') \ngroup by tag\n",
+          "queryType": "table",
+          "rawQueryText": "select tag\n, sum(\"count\") / sum(\"elapsed\")  \"througput\"\nfrom timeLog_v2\nwhere 1 = 1 \nand \"identifier\" in (${identifier:singlequote})\nand \"tagPath\" in (${tagPath:singlequote})\nand tag in (${tag:singlequote})\nand (\"traceId\" = ${traceId:singlequote} or ${traceId:singlequote} == '') \ngroup by tag\n",
+          "refId": "A",
+          "timeColumns": [
+            "time",
+            "ts"
+          ]
+        }
+      ],
+      "title": "Function Througput",
+      "transformations": [],
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "P6CBB2DBF24D67217"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 4,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        },
+        "xField": "count",
+        "xTickLabelRotation": -45,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "P6CBB2DBF24D67217"
+          },
+          "queryText": "select \"tag\" || ':' || cast(\"count\" as int) as \"count\"\n, sum(\"elapsed\") / sum(\"count\") \"elapsed\"\n, sum(\"user\")  / sum(\"count\") \"user\" \n, sum(\"children_user\")  / sum(\"count\") \"children_user\"\n, sum(\"system\")  / sum(\"count\") \"system\"\n, sum(\"children_system\")  / sum(\"count\") \"children_system\"\nfrom timeLog_v2\nwhere 1 = 1 \nand \"identifier\" in (${identifier:singlequote})\nand \"tagPath\" in (${tagPath:singlequote})\nand tag in (${tag:singlequote})\nand (\"traceId\" = ${traceId:singlequote} or ${traceId:singlequote} == '') \ngroup by \"tag\", \"count\"\n",
+          "queryType": "table",
+          "rawQueryText": "select \"tag\" || ':' || cast(\"count\" as int) as \"count\"\n, sum(\"elapsed\") / sum(\"count\") \"elapsed\"\n, sum(\"user\")  / sum(\"count\") \"user\" \n, sum(\"children_user\")  / sum(\"count\") \"children_user\"\n, sum(\"system\")  / sum(\"count\") \"system\"\n, sum(\"children_system\")  / sum(\"count\") \"children_system\"\nfrom timeLog_v2\nwhere 1 = 1 \nand \"identifier\" in (${identifier:singlequote})\nand \"tagPath\" in (${tagPath:singlequote})\nand tag in (${tag:singlequote})\nand (\"traceId\" = ${traceId:singlequote} or ${traceId:singlequote} == '') \ngroup by \"tag\", \"count\"\n",
+          "refId": "A",
+          "timeColumns": [
+            "time",
+            "ts"
+          ]
+        }
+      ],
+      "title": "Function Transmission Time",
+      "transformations": [],
       "type": "barchart"
     }
   ],
@@ -201,18 +419,122 @@
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "frser-sqlite-datasource",
+          "uid": "P6CBB2DBF24D67217"
+        },
+        "definition": "select identifier from timeLog_v2",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Identifier",
+        "multi": true,
+        "name": "identifier",
+        "options": [],
+        "query": "select identifier from timeLog_v2",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "frser-sqlite-datasource",
+          "uid": "P6CBB2DBF24D67217"
+        },
+        "definition": "select \"tagPath\" from timeLog_v2",
+        "description": "",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Tag Path",
+        "multi": true,
+        "name": "tagPath",
+        "options": [],
+        "query": "select \"tagPath\" from timeLog_v2",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "frser-sqlite-datasource",
+          "uid": "P6CBB2DBF24D67217"
+        },
+        "definition": "select tag from timeLog_v2",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Tag",
+        "multi": true,
+        "name": "tag",
+        "options": [],
+        "query": "select tag from timeLog_v2",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "",
+          "value": ""
+        },
+        "hide": 0,
+        "label": "Trace Id",
+        "name": "traceId",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "P4thfb_api",
   "uid": "a7cf3208-d89f-4f4a-8668-4ae71afab282",
-  "version": 6,
+  "version": 1,
   "weekStart": ""
 }
-
-

@@ -180,13 +180,14 @@ class Value(Leaf):
         As(Event).typeIdMap['Injury Stoppage']
     }
 
+    @staticmethod
     def valueEventTypes(): return {
         As(Event).typeIdMap['Shot'],
         As(Event).typeIdMap['Pass'],
         As(Event).typeIdMap['Carry']
     }
 
-    def predict(self, events, estimation):
+    async def predict(self, events, estimation):
 
         prediction0 = {
             'id': self.estimatorId(),
@@ -202,7 +203,7 @@ class Value(Leaf):
             assert id in idEstimatorMap
             estimator = idEstimatorMap[id]
             prediction0['predictionNodes'].append(
-                estimator.predict(events, estimationNode))
+                await estimator.predict(events, estimationNode))
 
         return prediction0
 
@@ -285,7 +286,7 @@ class Value(Leaf):
                 res['xG'] = xG
 
                 if (ownShot is not None) or (oppShot is not None):
-                    sXG = sxG = (xG if ownShot else 0) - (xG if oppShot else 0)
+                    sxG = (xG if ownShot else 0) - (xG if oppShot else 0)
                     res['sxG'] = sxG
 
                 if ownShot:

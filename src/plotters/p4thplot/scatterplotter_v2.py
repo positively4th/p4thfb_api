@@ -91,6 +91,8 @@ class ScatterPlotter(Leaf):
         },
     }
 
+    metaFeaurePaths = [('text',), ('color',), [('marker',)], ('olsGroups',)]
+
     configMap = {
         'markerSize': ('markerSize',),
         'text': {
@@ -99,8 +101,6 @@ class ScatterPlotter(Leaf):
                 lambda featureId, key, self: self.createFeatureRowPicker(
                     featureId),
                 lambda value, key, self: None if value is None else str,
-                lambda value, key, self: self.createAddMetaFeatureClass(
-                    value, key),
             )
         },
         'color': {
@@ -108,16 +108,12 @@ class ScatterPlotter(Leaf):
             'pipeCreators': (
                 lambda value, key, self: self.createFeatureColorRowPicker(
                     value, key),
-                lambda value, key, self: self.createAddMetaFeatureClass(
-                    value, key),
             )
         },
         'marker': {
             'path': [('marker',)],
             'pipeCreators': (
                 lambda value, key, self: self.createFeatureMarkerRowPicker(
-                    value, key),
-                lambda value, key, self: self.createAddMetaFeatureClass(
                     value, key),
             )
         },
@@ -128,8 +124,6 @@ class ScatterPlotter(Leaf):
             },
             'pipeCreators': (
                 lambda *args, key, self, **kwargs: self.createFeatureOLS(
-                    *args, **kwargs),
-                lambda *args, key, self, **kwargs: self.createAddMetaFeatureClass(
                     *args, **kwargs),
             )
         }

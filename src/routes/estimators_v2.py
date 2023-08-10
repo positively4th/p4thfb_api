@@ -12,8 +12,8 @@ def routes(estimatorDB):
         def helper():
             return As(EstimatorMapper)({}).load(estimatorDB(), jiffs=False)
 
-        estimators = await Python.retry(helper,
-                                        Python.createFixedSleeper(1.0, 10))
+        estimators = await Python.retry_async(helper,
+                                              Python.createFixedSleeper(1.0, 10))
         for estimator in estimators:
             del estimator['cls']
         return jsonify(estimators)

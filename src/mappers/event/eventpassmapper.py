@@ -38,7 +38,7 @@ class EventPassMapper(Leaf):
     _p.shot_assist = 'True' as "shotAssist",
     _p.file,
     _p.goal_assist = 'True' as "goalAssist",
-    _p.miscommunication = 'True' as miscommunication,
+    --_p.miscommunication = 'True' as miscommunication,
     --_p.straight = 'True' as straight,
     _p.assisted_shot_id as "eventShotId",
     _p.aerial_won = 'True' as "aerialWon",

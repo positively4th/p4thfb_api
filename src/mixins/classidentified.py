@@ -14,5 +14,5 @@ class ClassIdentified:
             return ClassIdentified.id(cls.__class__)
         if hasattr(cls, 'id') and cls.id != ClassIdentified.id:
             return cls.id(cls)
-        name = cls.__name__.split('_')[0]
-        return '{}_{}'.format(name, xxh32(cls.__name__).hexdigest())
+        name = cls.__name__.split('@')[0]
+        return '{}_{}'.format(name, xxh32(cls.__name__, seed=0).hexdigest())

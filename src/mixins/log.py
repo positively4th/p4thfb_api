@@ -2,11 +2,23 @@ import logging
 from random import random
 
 from contrib.pyas.src.pyas_v3 import Leaf
+from contrib.pyas.src.pyas_v3 import T
+
+
+from src.mixins.classidentified import ClassIdentified
 
 
 class Log(Leaf):
 
-    prototypes = []
+    prototypes = [
+        ClassIdentified, *ClassIdentified.prototypes,
+    ]
+
+    columnSpecs = {
+        'logPrefix': {
+            'transformer': T.writableEmpty(lambda val, key, classee: val if key in classee.row else f"[{ ClassIdentified.id(classee) }] "),
+        },
+    }
 
     logging = logging
 
@@ -21,7 +33,8 @@ class Log(Leaf):
             return
 
         l = getattr(self.logging, level)
-        l(self.logPrefix()+msg, *args, **kwargs)
+        l(self.logPrefix+msg, *args, **kwargs)
 
+    @property
     def logPrefix(self) -> str:
-        return ''
+        return self['logPrefix']

@@ -7,8 +7,6 @@ from contrib.pyas.src.pyas_v3 import T
 from src.tools.python_v2 import Python
 from src.store.store import Store
 
-from src.mixins.timelogdb import TimeLogDB
-
 
 class _AutoStores(Leaf):
 
@@ -17,12 +15,10 @@ class _AutoStores(Leaf):
     columnSpecs = {}
 
     db = None
-    timeLogDB = None
 
     @classmethod
-    def setDBs(cls, db, timeLogDB=None):
+    def setDBs(cls, db):
         cls.db = db
-        cls.timeLogDB = timeLogDB
 
     @classmethod
     def getStores(cls):
@@ -55,8 +51,8 @@ class _AutoStores(Leaf):
     def onNew(cls, self):
 
         def createColumnSpec(StoreClass):
-            storee = As(TimeLogDB, StoreClass)(
-                {**{'db': cls.db, 'timeLogDB': cls.timeLogDB}, **self.row})
+            storee = As(StoreClass)(
+                {**{'db': cls.db}, **self.row})
             return {
                 'transformer': T.virtual(lambda key, val, classee: storee)
             }
@@ -68,8 +64,8 @@ class _AutoStores(Leaf):
             self.__class__.columnSpecs[name] = createColumnSpec(s['cls'])
 
 
-def setAutoStoresDBs(db, timeLogDB=None):
-    _AutoStores.setDBs(db, timeLogDB)
+def setAutoStoresDBs(db):
+    _AutoStores.setDBs(db)
 
 
 def getAutoStores(_autoStores=[]):

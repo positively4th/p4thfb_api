@@ -10,9 +10,8 @@ from contrib.p4thpymap.src.mappers import pdf
 
 from src.mixins.versionguard import globalVersionGuard
 from src.mixins.versionguard import VersionGuardMismatchError
-from src.tools.python_v1 import Python
+from src.tools.python import Python
 from src.features.feature import Feature
-from src.features.featurematrix_v1 import FeatureMatrix
 from src.mixins.classnamed import ClassNamed
 from src.mixins.classidentified import ClassIdentified
 from src.mixins.config.config import Config
@@ -38,25 +37,41 @@ class Plotter:
             'transformer': T.writableEmpty(lambda val, key, classee: val if key in classee.row else []),
         },
         'plotNodes': {
-            'transformer': T.defWrapper(lambda *args: [], lambda val, key, classee: val if key in classee.row else []),
+            'transformer': T.defWrapper(lambda *args: [], lambda val, key, classee: val if key in classee.row else classee._allMetaFeatures()),
         },
         'errors': {
             'transformer': lambda val, key, classee: val if key in classee.row else [],
         },
     }
 
-    approvedVersions = {
-        'application': '==0.0.0',
-    }
     allowUnapprovedVersion = False
 
     config = {}
 
     configMap = {}
 
+    metaFeaurePaths = []
+
     @staticmethod
     def approveVersion(semanticVersion: tuple):
         return semanticVersion[0] == 3
+
+    def _setMetaFeatureClasses(self, config, allFeaturesClasses):
+        configee = As(Config)(config)
+
+        features = []
+        for path in self.metaFeaurePaths:
+            featureId = configee.pick(path)
+            if featureId is None:
+                continue
+            feature = R.find(
+                lambda featureClass: ClassIdentified.id(
+                    featureClass) == featureId
+            )(allFeaturesClasses)
+            if feature is not None:
+                features.append(feature)
+
+        self['MetaFeatureClasses'] = features
 
     @property
     def featureNames(self):
@@ -108,6 +123,8 @@ class Plotter:
                      events: list = None):
         if config is not None:
             self['config'] = config
+
+        self._setMetaFeatureClasses(self['config'], allFeatureClasses)
         return self['config']
 
     def plotFromMatrix(self, X, errors, config=None):

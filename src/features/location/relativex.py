@@ -2,7 +2,7 @@ import numpy as np
 
 from contrib.pyas.src.pyas_v3 import As
 
-from src.mixins.event.event_v2 import Event
+from src.mixins.event.event import Event
 from src.constants.pitch import Pitch as P
 
 

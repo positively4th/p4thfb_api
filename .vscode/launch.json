@@ -10,7 +10,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/src/api_v1.py",
-            "args": ["-c", "${workspaceFolder}/config.local.json"],
+            "args": ["-c", "${workspaceFolder}/config.local_v1.json"],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "justMyCode": false
@@ -20,7 +20,22 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/src/api_v2.py",
-            "args": ["-c", "${workspaceFolder}/config.local.json"],
+            "args": [
+                "-d",
+                "-c", "${workspaceFolder}/config.local_v2.json"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "hyper_v2: Python",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/hyper_v2.py",
+            "args": [
+                "-c", "${workspaceFolder}/config.local_v2.json"
+            ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "justMyCode": false

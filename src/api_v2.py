@@ -10,8 +10,7 @@ import json
 import asyncio
 import uvloop
 
-from contrib.p4thpydb.db.pgsql.db_async import DB as PGSQLDB
-from contrib.p4thpydb.db.sqlite.db_async import DB as SQLITEDB
+from contrib.pyas.src.pyas_v3 import As
 
 from src.mixins.versionguard import globalVersionGuard
 from src.tools.python_v2 import Python
@@ -26,22 +25,23 @@ from src.routes.events_v2 import routes as eventsRoutes
 from src.routes.competitions_v2 import routes as competitionRoutes
 from src.routes.matches_v2 import routes as matchRoutes
 from src.store.autostores import setAutoStoresDBs
-from src.tools.app import addRoute
-from src.tools.app import setupDBs
-from src.tools.app import createConfigGetter
+from src.tools.app_v2 import App
+from src.mixins.contextlogger import ContextLogger
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 # assert isinstance(asyncio.new_event_loop(), uvloop.Loop)
 applicationVersion = '1.0.0'
 
-# logging.getLogger().setLevel(logging.INFO)
-logging.basicConfig(level=logging.WARN)
+# logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 apiLogger = logging.getLogger('api')
 
 parser = argparse.ArgumentParser(description='p4thfb_api_v2')
 parser.add_argument('-c', metavar='configfile',
                     dest='CONFIGFILE', type=str, help='Path to config file.')
+parser.add_argument('-d', action='store_true',
+                    dest='DEBUG', help='Run in debug mode')
 args = parser.parse_args()
 
 app = Quart(__name__)
@@ -50,7 +50,7 @@ app.json = Python.JSONProvider(app)
 app.json.compact = True
 app.json.sort_keys = False
 
-configGetter = createConfigGetter(app, environ, args)
+configGetter = App.createConfigGetter(app, environ, args)
 app.config.update(configGetter())
 
 globalVersionGuard().setDomainVersionMap(
@@ -61,36 +61,57 @@ globalVersionGuard().setDomainVersionMap(
         }))
 )
 
-statDB, estimatorDB, timeLogDB = setupDBs(PGSQLDB, SQLITEDB, configGetter)
+statDB, estimatorDB, timeLogDB = App.setupDBs(configGetter)
 assert statDB
 assert timeLogDB
 
-setAutoStoresDBs(statDB, timeLogDB)
+setAutoStoresDBs(statDB)
+ContextLogger.setContextLogger(As(ContextLogger)({
+    'timeLogDB': timeLogDB,
+    'isActive': not configGetter('DEBUG'),
+    'staticData': {
+        'identifier': 'p4thfb_api',
+        'tag': 'api_v2',
+        'traceId': '',
+        'queryString': '',
+        'count': 1,
 
+    }
+}))
 
 for path, handler in matchRoutes(statDB).items():
-    addRoute(app, '/matches/', path, handler, logger=apiLogger)
+    App.addRoute(app, '/matches/', path, handler,
+                 logger=apiLogger, timelogDB=timeLogDB)
 for path, handler in competitionRoutes(statDB).items():
-    addRoute(app, '/competitions/', path, handler, logger=apiLogger)
+    App.addRoute(app, '/competitions/', path, handler,
+                 logger=apiLogger, timelogDB=timeLogDB)
 for name, handler in eventsRoutes(statDB, timeLogDB).items():
-    addRoute(app, '/events/', name, handler, logger=apiLogger)
+    App.addRoute(app, '/events/', name, handler,
+                 logger=apiLogger, timelogDB=timeLogDB)
 for name, handler in featuresRoutes(statDB).items():
-    addRoute(app, '/features/', name, handler, logger=apiLogger)
+    App.addRoute(app, '/features/', name, handler,
+                 logger=apiLogger, timelogDB=timeLogDB)
 for path, handler in featureRoutes(statDB).items():
-    addRoute(app, '/feature/', path, handler, logger=apiLogger)
+    App.addRoute(app, '/feature/', path, handler,
+                 logger=apiLogger, timelogDB=timeLogDB)
 for path, handler in plotterRoutes(statDB, estimatorDB).items():
-    addRoute(app, '/plotter', path, handler, logger=apiLogger)
+    App.addRoute(app, '/plotter', path, handler,
+                 logger=apiLogger, timelogDB=timeLogDB)
 for path, handler in plottersRoutes().items():
-    addRoute(app, '/plotters', path, handler, logger=apiLogger)
+    App.addRoute(app, '/plotters', path, handler,
+                 logger=apiLogger, timelogDB=timeLogDB)
 for path, handler in estimatorRoutes(statDB, estimatorDB).items():
-    addRoute(app, '/estimator/', path, handler, logger=apiLogger)
+    App.addRoute(app, '/estimator/', path, handler,
+                 logger=apiLogger, timelogDB=timeLogDB)
 for path, handler in estimatorsRoutes(estimatorDB).items():
-    addRoute(app, '/estimators/', path, handler, logger=apiLogger)
+    App.addRoute(app, '/estimators/', path, handler,
+                 logger=apiLogger, timelogDB=timeLogDB)
 for path, handler in systemRoutes(app, applicationVersion).items():
-    addRoute(app, '/system/', path, handler, logger=apiLogger)
+    App.addRoute(app, '/system/', path, handler,
+                 logger=apiLogger, timelogDB=timeLogDB)
 
 
 if __name__ == '__main__':
-
-    app.run(loop=asyncio.get_event_loop(), host=configGetter('HOST', '127.0.0.1'), port=configGetter('PORT', 3000), debug=True,
+    debug = configGetter('DEBUG', False)
+    app.run(loop=asyncio.get_event_loop(), host=configGetter('HOST', '127.0.0.1'), port=configGetter('PORT', 3000), debug=debug,
             use_debugger=False, use_reloader=False)

@@ -1,3 +1,5 @@
+import ramda as R
+
 from contrib.pyas.src.pyas_v3 import As
 
 from src.features.featurematrix_v2 import FeatureMatrix
@@ -15,7 +17,7 @@ class Plotter:
     async def plot(self, events, config=None):
 
         X, errors = await FeatureMatrix.vectorizeEvents(
-            events, self['FeatureClasses'] + self['MetaFeatureClasses'])
+            events, R.uniq(self['FeatureClasses'] + self['MetaFeatureClasses']))
         X = As(FeatureMatrix)._keepMatrixRows(
             X, As(FeatureMatrix).faultyRowIndexSet(errors))
 

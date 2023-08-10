@@ -2,19 +2,20 @@
 	"DOMAINVERSIONMAP": {
 		"application": "1.0.0"
 	},
-	"HOST": "0.0.0.0",
+	"HOST": "127.0.0.1",
 	"PORT": 3000,
+	"DEBUG": true,
 	"STATDB": {
 		"TYPE": "pgsql",
 		"ASYNC": true,
-		"args": ["postgresql://p4thfb_api:p4thfb_api@postgres/p4thfb_api"],
+		"args": ["postgresql://p4thfb_api:p4thfb_api@localhost:3432/p4thfb_api"],
 		"kwargs": {}
     },
     "TIMELOGDB": {
 		"TYPE": "sqlite",
 		"args": [],
 		"kwargs": {
-			"fileName": "/data/timelog.db"
+			"fileName": "/mnt/data/p4thfb_volume/api/timelog.db"
 		}
 	},
 	"ESTIMATORDB": {
@@ -22,7 +23,7 @@
 		"ASYNC": true,
 		"args": [],
 		"kwargs": {
-			"fileName": "/data/estimator.db"
+			"fileName": "/mnt/data/p4thfb_volume/api/estimator.db"
 		}
     }
 }

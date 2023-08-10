@@ -2,7 +2,6 @@ import json
 from quart import jsonify
 from quart import request
 import ramda as R
-import datetime
 
 from contrib.pyas.src.pyas_v3 import As
 
@@ -10,15 +9,11 @@ from src.common.filter import Filter
 from src.tools.python_v2 import Python
 from src.store.event.eventstore import EventStore
 from src.mixins.event.event_v2 import Event
-from src.mixins.timelogdb import TimeLogDB
+from src.mixins.contextlogger import ContextLogger
 from src.store.autostores import getAutoStores
 
 
 def routes(db, timeLogDB):
-
-    timeLogDBee = As(TimeLogDB)({
-        'timeLogDB': timeLogDB
-    })
 
     stores = getAutoStores()
 
@@ -29,9 +24,7 @@ def routes(db, timeLogDB):
         'type': None,
     }
 
-    async def events():
-
-        group = datetime.datetime.now().isoformat()
+    async def eventsHandler():
 
         eventStoree = As(EventStore)({**stores['eventStore']})
         filter = request.args.get('filter')
@@ -40,30 +33,34 @@ def routes(db, timeLogDB):
 
         qp = Filter.eventFilter, {}
         qp = filteree.apply(db.createPipes(), qp)
-        rows = await db.query(qp)
-        ids = [r['__id'] for r in rows]
-        events = await (timeLogDBee.asRuntimeLogged(eventStoree.get,
-                                                    identifier=__file__,
-                                                    tag='eventStoree.get',
-                                                    group=group,
-                                                    count=len(ids)))(ids)
-        events = await (timeLogDBee.asRuntimeLogged(Event.export,
-                                                    identifier=__file__,
-                                                    tag='Event.export',
-                                                    group=group,
-                                                    count=len(ids)))(R.unnest(events.values()), features={
-                                                        'relatedEvents': {**oneLevelExportFeatures},
-                                                        'visiblePlayers': None,
-                                                        'visibleArea': None,
-                                                        'type': None,
-                                                    })
 
-        resp = await (timeLogDBee.asRuntimeLogged(jsonify, identifier=__file__,
-                                                  tag='jsonify',
-                                                  group=group,
-                                                  count=len(ids)))(Python.CSONWrapper(events))
+        rows = await ContextLogger.asLogged(db.query,
+                                            resultHandler=ContextLogger.countResultHandler,
+                                            )(qp)
+
+        ids = [r['__id'] for r in rows]
+
+        events = await ContextLogger.asLogged(eventStoree.get,
+                                              resultHandler=ContextLogger.countResultHandler,
+                                              )(ids)
+
+        events = await ContextLogger.asLogged(Event.export,
+                                              resultHandler=ContextLogger.countResultHandler,
+                                              )(R.unnest(events.values()),
+                                                features={
+                                                  'relatedEvents': {**oneLevelExportFeatures},
+                                                  # 'relatedEvents': {},
+                                                  'visiblePlayers': None,
+                                                  'visibleArea': None,
+                                                  'type': None,
+                                              },
+        )
+
+        resp = ContextLogger.asLogged(Python.CSONWrapper)(events)
+
+        resp = ContextLogger.asLogged(jsonify)(resp)
         return resp
 
     return {
-        '/': (events, (), {'methods': ['GET']}),
+        '/': (eventsHandler, (), {'methods': ['GET']}),
     }

@@ -1,5 +1,6 @@
 import numpy as np
 import ramda as R
+from threading import Lock
 
 from contrib.pyas.src.pyas_v3 import As
 from contrib.pyas.src.pyas_v3 import Leaf
@@ -15,6 +16,7 @@ from src.tools.python_v2 import Python
 class Feature:
 
     classSpecCache = None
+    classSpecCacheLock = Lock()
     featuresCache = None
     featureAsStrCache = {}
 
@@ -31,6 +33,7 @@ class Feature:
     @staticmethod
     def onNewClass(cls):
         cls.verifyVersions()
+        cls.classSpecCacheLock = Lock()
 
     @classmethod
     def allFeatures(cls):
@@ -65,19 +68,20 @@ class Feature:
     @classmethod
     def getCachedClassSpecs(cls):
 
-        if cls.classSpecCache is None:
+        with cls.classSpecCacheLock:
+            if cls.classSpecCache is None:
 
-            cls.classSpecCache = []
+                cls.classSpecCache = []
 
-            classSpecs = Python.getClasses(
-                'src/features/**/*.py', rootDir='.', filterers=[cls.featureFilterer])
-            for classSpec in classSpecs:
+                classSpecs = Python.getClasses(
+                    'src/features/**/*.py', rootDir='.', filterers=[cls.featureFilterer])
+                for classSpec in classSpecs:
 
-                cls.classSpecCache.append({
-                    **classSpec,
-                })
+                    cls.classSpecCache.append({
+                        **classSpec,
+                    })
 
-        return cls.classSpecCache
+            return cls.classSpecCache
 
     @classmethod
     def getFeatures(cls, featureId=None, featureNames=None, filterers=[]):
@@ -179,6 +183,7 @@ class Feature:
             if inverse:
                 if val not in _cache:
                     F = cls.getFeatures(val)
+                    assert len(F) == 1, f"Unable to recover feature { val }."
                     _cache[val] = As(F[0]['cls']) if len(F) == 1 else None
                 return _cache[val]
 

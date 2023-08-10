@@ -2,7 +2,7 @@ import ramda as R
 import asyncio
 import threading
 import logging
-from inspect import iscoroutine
+import random
 
 from contrib.pyas.src.pyas_v3 import Leaf
 from contrib.pyas.src.pyas_v3 import T
@@ -10,14 +10,19 @@ from contrib.pyas.src.pyas_v3 import As
 
 from src.store.queue.queueitem import QueueItem
 from src.mixins.log import Log
+from src.mixins.contextlogger import ContextLogger
+from src.mixins.classnamed import ClassNamed
 
 
 class Store(Leaf):
 
-    prototypes = [Log] + Log.prototypes
+    prototypes = [
+        Log, *Log.prototypes,
+        ClassNamed, *ClassNamed.prototypes,
+    ]
 
     batchSize = 1000
-    batchDelay = 0.0001
+    batchDelay = 0.01
     Mapper = None
 
     columnSpecs = {
@@ -39,20 +44,7 @@ class Store(Leaf):
         'batchDelay': {
             'transformer': T.writableEmpty(lambda val, key, classee: val if key in classee.row else classee.batchDelay),
         },
-
     }
-
-    @classmethod
-    async def logRunTime(cls, f: callable, logger: callable, meta: dict = {}):
-        res = f()
-        if iscoroutine(res):
-            res = await res
-        return res
-
-    def logDuration(self, data: dict):
-        self.log('debug', '{storeId} fetched {count} items in {elapsedTime} (system: {systemTime}, user: {userTime})'
-                 .format(storeId=self.__class__.__name__, count=data['count'], elapsedTime=data['elapsed'], systemTime=data['system'],
-                         userTime=data['user']))
 
     @classmethod
     def debug(cls):
@@ -61,20 +53,6 @@ class Store(Leaf):
             format="%(asctime)s,%(msecs)d %(levelname)s: %(message)s",
             datefmt="%H:%M:%S",
         )
-
-    @classmethod
-    async def monitor(cls):
-        while True:
-            tasks = [
-                t for t in asyncio.all_tasks()
-                if t is not asyncio.current_task()
-            ]
-
-            for t in tasks:
-                print('\n\n', t.get_name())
-                print(t)
-                t.print_stack(limit=5)
-            await asyncio.sleep(1)
 
     @classmethod
     def onNew(cls, self):
@@ -105,9 +83,6 @@ class Store(Leaf):
         res = res.split('_')
         return res[0]
 
-    def logPrefix(self):
-        return '[{} Store] '.format(self.mapperName)
-
     def start(self):
 
         def deliverItems(queueItems):
@@ -127,39 +102,54 @@ class Store(Leaf):
 
         async def helper(name):
 
-            def logWaitWrapper(data: dict, result):
-                return {**data, 'count': len(result)}
+            async def retryGet(delay=0, retries=1):
+                try:
+                    if self.__class__.__name__.find('EventStore_'):
+                        pass
+
+                    return self.producer.get_nowait()
+                except asyncio.QueueEmpty as e:
+                    if retries > 0:
+                        await asyncio.sleep(delay)
+                        return await retryGet(retries=retries-1)
+                    # self.log('error', 'Empty queue: {}'.format(e))
+                return None
 
             async def waitForSeveral():
+
                 items = []
-                items.append(await self.producer.get())
+                if self.__class__.__name__.find('EventStore_'):
+                    pass
                 while len(items) < self['batchSize']:
-                    await asyncio.sleep(self['batchDelay'])
-                    try:
-                        items.append(self.producer.get_nowait())
-                    except asyncio.QueueEmpty:
-                        break
+                    # try:
+                    if self.__class__.__name__.find('EventStore_'):
+                        pass
+                    item = await retryGet(self['batchDelay'], retries=1)
+                    if item is None:
+                        if len(items) > 0:
+                            break
+                    else:
+                        items.append(item)
+
+                if self.__class__.__name__.find('EventStore_'):
+                    pass
                 return items
 
             while True:
-                items = await self.logRunTime(waitForSeveral, {'tag': 'waitForSeveral'}, logWaitWrapper)
+                items = await waitForSeveral()
 
                 self.log('info', '{} is processing'.format(name))
                 try:
-                    queueItems = await self.logRunTime(lambda: self.process(items),
-                                                       {
-                                                           'tag': 'process',
-                                                           'count': len(items)
-                    })
+                    queueItems = await ContextLogger.asLogged(
+                        self.process,
+                        tag=f"{ self.process.__name__ }:{ ClassNamed.name(self) }",
+                        resultHandler=ContextLogger.countResultHandler)(items)
                 except Exception as e:
                     queueItems = [{**item, **{'result': e}} for item in items]
                 deliverItems(queueItems)
 
         assert self.queueTask is None
 
-        # loop = asyncio.get_running_loop()
-        # self.queueTask = loop.create_task(helper())
-        # loop.run_until_complete(self.queueTask)
         name = self.__class__.__name__
         self.queueTask = asyncio.create_task(
             helper(name), name=name)
@@ -186,7 +176,7 @@ class Store(Leaf):
             })
         return await q.get()
 
-    async def get(self, id: str | list[str] | tuple[str]) -> list[dict]:
+    async def get(self, id: str | list[str] | tuple[str], **kwArgs) -> list[dict]:
 
         if isinstance(id, str):
             items = await self.get([id])
@@ -195,7 +185,6 @@ class Store(Leaf):
         self.ensureOpen()
 
         pendingIds = []
-
         res = {}
         for __id in id:
             if __id in self['loadedMap']:
@@ -203,23 +192,64 @@ class Store(Leaf):
             else:
                 pendingIds.append(__id)
 
-        tasks = asyncio.gather(*(self.waitFor(__id)
-                               for __id in pendingIds), return_exceptions=True)
-        try:
-            queueItems = await tasks
-        except Exception as e:
-            self.log('error', e)
-            raise e
+        async def loadNewTG(pendingIds):
+            res = {}
+            tasks = []
+            async with asyncio.TaskGroup() as taskGroup:
+                for __id in pendingIds:
+                    tasks.append(taskGroup.create_task(self.waitFor(__id)))
+            es = []
+            for qi in tasks:
+                qi = qi.result()
+                r = qi['result']
+                if isinstance(r, Exception):
+                    es.append(r)
+                else:
+                    res[qi['__id']] = r
+            for e in es:
+                raise e
+            return res
 
-        es = []
+        async def loadNewGather(pendingIds):
+            res = {}
+            try:
+                coros = (self.waitFor(__id) for __id in pendingIds)
+                cores = await asyncio.gather(
+                    *coros, return_exceptions=True)
+            except Exception as e:
+                self.log('error', e)
+                raise e
+            es = []
+            for qi in cores:
+                r = qi['result']
+                if isinstance(r, Exception):
+                    es.append(r)
+                else:
+                    res[qi['__id']] = r
+            for e in es:
+                raise e
+            return res
 
-        for qi in queueItems:
-            r = qi['result']
-            if isinstance(r, Exception):
-                es.append(r)
-            else:
-                res[qi['__id']] = r
-        for e in es:
-            raise e
+        async def loadNewAsCompleted(pendingIds):
+            res = {}
+            tasks = [asyncio.create_task(self.waitFor(
+                __id), name=__id) for __id in pendingIds]
+            try:
+                for task in asyncio.as_completed(tasks):
+                    qi = await task
+                    r = qi['result']
+                    res[qi['__id']] = r
+                return res
+            except Exception as e:
+                print(e)
+                raise (e)
+
+        r = random.randint(0, 2)
+        if r < 1:
+            res.update(await ContextLogger.asLogged(loadNewTG, resultHandler=ContextLogger.countResultHandler)(pendingIds))
+        elif r < 2:
+            res.update(await ContextLogger.asLogged(loadNewGather, resultHandler=ContextLogger.countResultHandler)(pendingIds))
+        else:
+            res.update(await ContextLogger.asLogged(loadNewAsCompleted, resultHandler=ContextLogger.countResultHandler)(pendingIds))
 
         return res

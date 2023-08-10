@@ -4,23 +4,26 @@
 	},
 	"HOST": "127.0.0.1",
 	"PORT": 3000,
+	"DEBUG": true,
 	"STATDB": {
 		"TYPE": "pgsql",
-		"args": ["postgresql://statsbomb:watw1watc@localhost/statsbomb_v2_r3"],
+		"ASYNC": false,
+		"args": ["postgresql://p4thfb_api:p4thfb_api@localhost:3432/p4thfb_api"],
 		"kwargs": {}
     },
     "TIMELOGDB": {
 		"TYPE": "sqlite",
 		"args": [],
 		"kwargs": {
-			"fileName": "/tmp/timelog.db"
+			"fileName": "/mnt/data/p4thfb_volume/api/timelog.db"
 		}
 	},
 	"ESTIMATORDB": {
 		"TYPE": "sqlite", 
+		"ASYNC": false,
 		"args": [],
 		"kwargs": {
-			"fileName": "/tmp/estimator.db"
+			"fileName": "/mnt/data/p4thfb_volume/api/estimator.db"
 		}
     }
 }

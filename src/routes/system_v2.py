@@ -7,7 +7,7 @@ def routes(app, appversion):
 
     assert isinstance(asyncio.new_event_loop(), uvloop.Loop)
 
-    def version():
+    async def version():
         assert isinstance(asyncio.new_event_loop(), uvloop.Loop)
         return jsonify({
             'version': [int(v) for v in appversion.split('.')]
